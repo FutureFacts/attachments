@@ -8,7 +8,7 @@ Supports clean DSL commands for the Attachments() simple API.
 DSL Commands:
     [images:true|false] - Include sheet screenshots (default: true)
     [format:plain|markdown] - Text formatting (default: markdown)
-        Aliases: text=plain, txt=plain, md=markdown
+        Aliases: text=plain, txt=plain, md=markdown, csv=csv
     [pages:1-3,5] - Specific sheets (inherits from existing modify.pages, treats pages as sheets)
     [resize_images:50%|800x600] - Image resize specification (consistent naming)
     [tile:2x2|3x1|4] - Tile multiple sheets into grid layout (default: 2x2 for multi-sheet workbooks)
@@ -66,29 +66,34 @@ def excel_to_llm(att: Attachment) -> Attachment:
     from .. import load, modify, present, refine
     
     # Determine text format from DSL commands
-    format_cmd = att.commands.get('format', 'markdown')
+    format_cmd = att.commands.get('format', 'markdown').lower()
     
     # Handle format aliases
     format_aliases = {
         'text': 'plain',
-        'txt': 'plain', 
-        'md': 'markdown'
+        'txt': 'plain',
+        'md': 'markdown',
+        'csv': 'csv',
     }
     format_cmd = format_aliases.get(format_cmd, format_cmd)
+    
+    # Determine presenters & loaders
+    if format_cmd == 'plain':
+        text_presenter = present.text
+        loader_fn      = load.excel_to_openpyxl
+    elif format_cmd == 'csv':
+        text_presenter = present.csv
+        loader_fn      = load.excel_to_libreoffice
+    else:  # markdown (default)
+        text_presenter = present.markdown
+        loader_fn      = load.excel_to_openpyxl
     
     # Determine if images should be included
     include_images = att.commands.get('images', 'true').lower() == 'true'
     
-    # Build the pipeline based on format and image preferences
-    if format_cmd == 'plain':
-        # Plain text format
-        text_presenter = present.text
-    else:
-        # Default to markdown
-        text_presenter = present.markdown
     
     # Build image pipeline if requested
-    if include_images:
+    if include_images and format_cmd != 'csv':
         image_pipeline = present.images
     else:
         # Empty pipeline that does nothing
@@ -98,7 +103,7 @@ def excel_to_llm(att: Attachment) -> Attachment:
     return (att 
            | load.url_to_response      # Handle URLs with new morphing architecture
            | modify.morph_to_detected_type  # Smart detection replaces hardcoded url_to_file
-           | load.excel_to_openpyxl     # Then load as openpyxl Workbook
+           | loader_fn                       # <- whichever we chose above
            | modify.pages               # Apply sheet selection if specified  
            | text_presenter + image_pipeline + present.metadata
            | refine.tile_images | refine.resize_images | refine.add_headers) 
