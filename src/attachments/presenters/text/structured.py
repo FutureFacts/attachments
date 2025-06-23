@@ -1,6 +1,61 @@
 """Structured text presenters - CSV, XML, etc."""
 
 from ...core import Attachment, presenter
+import tempfile
+import subprocess
+from pathlib import Path
+from ...loaders.documents.office import LibreOfficeDocument
+
+@presenter
+def csv(att: Attachment, doc: LibreOfficeDocument) -> Attachment:
+    """
+    Converts an Excel workbook to CSV format using the LibreOffice binary.
+    Each sheet is converted to a separate CSV block.
+    """
+    soffice = att.metadata.get("libreoffice_binary_path")
+    if not soffice:
+        att.text += (
+            "LibreOffice binary path not found. Please use the 'excel_to_libreoffice' loader first."
+        )
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        try:
+            source_path = doc.path
+
+            # Run LibreOffice conversion. It creates one .csv file per sheet.
+            subprocess.run(
+                [soffice, "--headless", "--convert-to", "csv", "--outdir", temp_dir, source_path],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=60,
+            )
+
+            temp_path = Path(temp_dir)
+            csv_files = sorted(list(temp_path.glob("*.csv")))
+
+            if not csv_files:
+                att.text += "CSV conversion failed - no output files found."
+
+            for csv_file in csv_files:
+                # Try to derive sheet name from filename, e.g., "source.Sheet1.csv"
+                base_stem = Path(source_path).stem
+                sheet_name = csv_file.stem
+                if sheet_name.startswith(base_stem):
+                    sheet_name = sheet_name[len(base_stem) :].lstrip(".")
+
+                att.text += csv_file.read_text(encoding="utf-8")
+                att.text += "\n\n"
+
+        except subprocess.TimeoutExpired:
+            att.metadata["libreoffice_error"] = "Excel to CSV conversion timed out (>60s)"
+        except subprocess.CalledProcessError as e:
+            err_msg = e.stderr.decode("utf-8", errors="ignore")
+            att.metadata["libreoffice_error"] = f"LibreOffice conversion failed: {err_msg}"
+        except Exception as e:
+            att.metadata["libreoffice_error"] = f"Error converting Excel to CSV: {e}"
+
+    return att
 
 
 @presenter

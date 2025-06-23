@@ -2,6 +2,7 @@
 
 from ...core import Attachment, loader
 from ... import matchers
+import shutil
 
 
 @loader(match=matchers.pptx_match)
@@ -43,4 +44,32 @@ def excel_to_openpyxl(att: Attachment) -> Attachment:
             
     except ImportError:
         raise ImportError("openpyxl is required for Excel loading. Install with: pip install openpyxl")
+    return att 
+
+
+class LibreOfficeDocument:
+    """A proxy object representing a document to be handled by LibreOffice."""
+    def __init__(self, path: str):
+        self.path = path
+
+    def __repr__(self):
+        return f"LibreOfficeDocument(path='{self.path}')"
+
+
+@loader(match=matchers.excel_match)
+def excel_to_libreoffice(att: Attachment) -> Attachment:
+    """
+    Prepares an Excel file for processing via LibreOffice by checking for the
+    binary and wrapping the attachment in a LibreOfficeDocument proxy object.
+    """
+    soffice = shutil.which("libreoffice") or shutil.which("soffice")
+    if not soffice:
+        raise RuntimeError("LibreOffice/soffice not found. This loader requires a LibreOffice installation.")
+    
+    # Store the binary path for the presenter to use
+    att.metadata['libreoffice_binary_path'] = soffice
+
+    # Set the object to our proxy type for dispatch
+    att._obj = LibreOfficeDocument(att.path)
+    
     return att 
