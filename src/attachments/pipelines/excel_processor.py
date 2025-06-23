@@ -7,8 +7,8 @@ Supports clean DSL commands for the Attachments() simple API.
 
 DSL Commands:
     [images:true|false] - Include sheet screenshots (default: true)
-    [format:plain|markdown] - Text formatting (default: markdown)
-        Aliases: text=plain, txt=plain, md=markdown, csv=csv
+    [format:plain|markdown|csv] - Text formatting (default: markdown)
+        Aliases: text=plain, txt=plain, md=markdown
     [pages:1-3,5] - Specific sheets (inherits from existing modify.pages, treats pages as sheets)
     [resize_images:50%|800x600] - Image resize specification (consistent naming)
     [tile:2x2|3x1|4] - Tile multiple sheets into grid layout (default: 2x2 for multi-sheet workbooks)
