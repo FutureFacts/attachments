@@ -96,34 +96,111 @@ class DslCommandVisitor(ast.NodeVisitor):
             match = re.search(pattern, docstring, re.IGNORECASE)
             if match:
                 values_str = match.group(1)
-                # Split by comma and clean up
-                values = [v.strip() for v in values_str.split(',')]
-                # Filter out non-value words
-                filtered_values = []
-                for v in values:
-                    # Skip explanatory text in parentheses
-                    v = re.sub(r'\([^)]+\)', '', v).strip()
-                    # Skip words that look like explanations
-                    if v and not any(word in v.lower() for word in ['default', 'affects', 'size', 'and']):
-                        filtered_values.append(v)
-                if filtered_values:
-                    allowable.extend(filtered_values)
-                    break
+                # Split by comma
+                raw_values = [v.strip() for v in values_str.split(',')]
+
+                cleaned_values = []
+                for v_raw in raw_values:
+                    v = v_raw # Start with the raw value for this iteration
+
+                    # 1. Remove content within balanced parentheses first
+                    v_no_balanced_paren = re.sub(r'\s*\([^)]*\)\s*', '', v).strip()
+
+                    # 2. If an opening parenthesis exists and v was unchanged by balanced paren removal
+                    #    (e.g., "val (unclosed" or "val (explanation, with comma)"),
+                    #    split at the first '(' and take the part before it.
+                    if '(' in v and v_no_balanced_paren == v:
+                        v = v.split('(', 1)[0].strip()
+                    else:
+                        # Otherwise, use the result of balanced paren removal
+                        v = v_no_balanced_paren
+
+                    # 3. Remove common trailing explanations (e.g., " - ...", " = ...", " for ...")
+                    v = re.sub(r'\s*-\s*.*$', '', v).strip()
+                    v = re.sub(r'\s*=\s*.*$', '', v).strip() # Handles "value = explanation"
+                    v = re.sub(r'\s+for\s+.*$', '', v).strip()
+                    v = re.sub(r'\s+to\s+.*$', '', v).strip()
+
+                    # 4. Clean extraneous characters (e.g., trailing brackets from "[value]")
+                    v = v.strip('[]')
+
+                    # 5. Remove potential command context like "command:value" -> "value"
+                    if ':' in v:
+                        parts = v.split(':', 1)
+                        if len(parts) > 1 and parts[0].lower() == command.lower():
+                            v = parts[1].strip()
+
+                    # 6. Final cleanup of any remaining brackets if value is simple (no spaces, other brackets, colons)
+                    if not any(c in v for c in [' ', '(', ')', ':']):
+                        v = v.strip('[]{}()')
+
+                    # 7. Skip words that look like explanations or are too short/generic
+                    exclusion_keywords = ['default', 'affects', 'size', 'and', 'e.g.', 'etc', 'example']
+                    if v and not any(word in v.lower() for word in exclusion_keywords) and len(v) > 0:
+                        if v not in ['[]', '{}']: # Skip empty list/dict artifacts
+                            cleaned_values.append(v)
+
+                if cleaned_values:
+                    # Remove duplicates while preserving order
+                    seen = set()
+                    unique_cleaned_values = [x for x in cleaned_values if not (x in seen or seen.add(x))]
+                    allowable.extend(unique_cleaned_values)
+                    # Do not break here yet, let the fallback logic after the loop handle overrides.
+                    # allowable.extend(unique_cleaned_values) # Values are extended, not reset
+                    # break # We don't break, to allow multiple patterns to contribute if necessary.
+
+        # --- New Fallback/Override Logic (Iteration 4 - Part B) ---
         
-        # Special handling for common boolean commands
-        if command in ['fullpage', 'recursive', 'files', 'force', 'dirs_only_with_files']:
+        # Make sure `allowable` contains unique values gathered so far if any pattern matched.
+        if allowable:
+            seen = set()
+            allowable = [x for x in allowable if not (x in seen or seen.add(x))]
+
+        # Check quality of initially parsed values for typical boolean commands
+        is_poor_quality_for_boolean = False
+        typical_boolean_cmds = ['files', 'images', 'head', 'summary', 'fullpage', 'recursive', 'force', 'dirs_only_with_files']
+        if command in typical_boolean_cmds and allowable: # only check if we found something
+            # If any extracted value (not 'true' or 'false') for these commands still contains typical explanation markers
+            if any( ('=' in val or '[' in val or ']' in val or ':' in val or '(' in val or ')' in val)
+                    for val in allowable if val.lower() not in ['true', 'false']):
+                is_poor_quality_for_boolean = True
+
+        # If quality is poor for a boolean command, or if nothing was found for it, set to true/false.
+        if command in typical_boolean_cmds and (is_poor_quality_for_boolean or not allowable):
             allowable = ['true', 'false']
         
-        # Special handling for format commands
-        elif command == 'format':
-            allowable = ['plain', 'text', 'txt', 'markdown', 'md', 'html', 'code', 'xml', 'csv', 'structured']
+        # Format command (specific list, should override if command is 'format')
+        # This is 'if', not 'elif', so it can potentially override a 'true,false' if command is 'format'
+        if command == 'format':
+            base_formats = ['plain', 'text', 'txt', 'markdown', 'md', 'html', 'code', 'xml', 'csv', 'structured']
+            # If allowable is empty, or contains values not in base_formats (e.g. true/false from above rule)
+            # or if it's just generally messy and doesn't look like format values.
+            current_is_valid_format_subset = False
+            if allowable: # Check if current allowable values are a valid subset of base_formats
+                current_is_valid_format_subset = all(val in base_formats for val in allowable)
+
+            if not allowable or not current_is_valid_format_subset:
+                 allowable = base_formats # Override with standard formats
+            # No complex merge needed here; if it's 'format', it should be these values.
+            # If specific docstring parsing yielded a subset of these, that's fine, but if it yielded
+            # 'true','false', this override fixes it.
+
+        # Position/Watermark (specific list) - only if nothing specific was parsed by the main loop
+        elif command in ['watermark'] or 'position' in command.lower():
+            if not allowable: # Only if the main parsing loop found nothing suitable
+                position_keywords = ['bottom-right', 'bottom-left', 'top-right', 'top-left', 'center']
+                # Check if docstring mentions any position keyword, then use full list.
+                if any(kw in docstring for kw in position_keywords):
+                    allowable = position_keywords
         
-        # Extract from specific docstring patterns
-        elif 'position' in command.lower() or command in ['watermark']:
-            if 'bottom-right' in docstring:
-                allowable = ['bottom-right', 'bottom-left', 'top-right', 'top-left', 'center']
+        # Final filter for any empty strings and ensure uniqueness again after overrides
+        final_allowable = []
+        seen_final = set()
+        for val in allowable:
+            if val and not (val in seen_final or seen_final.add(val)):
+                final_allowable.append(val)
         
-        return allowable
+        return final_allowable
 
     def _extract_command_description(self, command: str) -> str:
         """Extract description for a command from docstring."""
