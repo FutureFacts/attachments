@@ -24,13 +24,15 @@ def git_repo_to_structure(att: Attachment) -> Attachment:
     # Determine process_files based on 'files' command, 'mode' command, or default to True for repos
     explicit_files_command = att.commands.get('files')
     mode_command = att.commands.get('mode')
+    is_code_mode = mode_command == 'code' or att.commands.get('format') == 'code'
 
     if explicit_files_command is not None:
         process_files = explicit_files_command.lower() == 'true'
     elif mode_command is not None:
-        # 'content' mode implies processing files.
-        # 'structure' or 'metadata' modes imply process_files = False for loader's file content access.
-        process_files = mode_command.lower() == 'content'
+        # 'content' or 'code' mode implies processing files.
+        process_files = mode_command.lower() == 'content' or is_code_mode
+    elif is_code_mode:
+        process_files = True
     else:
         # Default for git_repo_to_structure: process files, aligning with README "Default mode: content"
         process_files = True
@@ -112,7 +114,7 @@ def git_repo_to_structure(att: Attachment) -> Attachment:
     # 3. User forced processing with force:true
     
     # Now collect files normally
-    all_files = collect_files(repo_path, ignore_patterns, max_files, glob_pattern, include_binary=True)
+    all_files = collect_files(repo_path, ignore_patterns, max_files, glob_pattern, include_binary=not is_code_mode)
     files = all_files
     
     # Create repository structure object

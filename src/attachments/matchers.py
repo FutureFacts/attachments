@@ -141,8 +141,43 @@ def image_match(att: 'Attachment') -> bool:
 
 def text_match(att: 'Attachment') -> bool:
     """Enhanced text matcher: checks file extension, Content-Type, and content analysis."""
-    # File extension check
-    if att.path.endswith(('.txt', '.md', '.log', '.json', '.py', '.xml', '.html', '.htm', '.rst')):
+    # File extension check - comprehensive list of text-based file extensions
+    text_extensions = (
+        # Plain text and documentation
+        '.txt', '.text', '.asc', '.rtf', '.md', '.markdown', '.mdown', '.mkd', '.mdx',
+        '.rst', '.rest', '.asciidoc', '.adoc', '.org', '.tex', '.latex',
+        
+        # Programming languages
+        '.py', '.pyw', '.pyi', '.js', '.mjs', '.jsx', '.ts', '.tsx', '.java', '.class',
+        '.c', '.h', '.cpp', '.cc', '.cxx', '.hpp', '.cs', '.php', '.rb', '.go', '.rs',
+        '.swift', '.kt', '.scala', '.clj', '.hs', '.elm', '.dart', '.lua', '.pl', '.pm',
+        '.r', '.R', '.m', '.f', '.f90', '.f95', '.pas', '.vb', '.vbs', '.ps1', '.psm1',
+        '.sh', '.bash', '.zsh', '.fish', '.tcl', '.awk', '.sed',
+        
+        # Web technologies
+        '.html', '.htm', '.xhtml', '.xml', '.xsl', '.xslt', '.css', '.scss', '.sass',
+        '.less', '.stylus', '.svg', '.vue', '.svelte', '.jsp', '.asp', '.aspx', '.php',
+        
+        # Data formats
+        '.json', '.jsonl', '.yaml', '.yml', '.toml', '.ini', '.cfg', '.conf', '.properties',
+        '.env', '.dotenv', '.csv', '.tsv', '.dsv', '.sql', '.ddl', '.dml',
+        
+        # Configuration and build files
+        '.makefile', '.dockerfile', '.dockerignore', '.gitignore', '.gitattributes',
+        '.editorconfig', '.eslintrc', '.prettierrc', '.babelrc', '.npmrc', '.yarnrc',
+        '.requirements', '.pipfile', '.poetry', '.pyproject', '.setup', '.manifest',
+        '.cmake', '.gradle', '.maven', '.sbt', '.ant', '.rake', '.gulp', '.grunt',
+        
+        # Log and output files
+        '.log', '.out', '.err', '.trace', '.debug', '.info', '.warn', '.error',
+        
+        # Miscellaneous text formats
+        '.patch', '.diff', '.rej', '.orig', '.backup', '.bak', '.tmp', '.temp',
+        '.include', '.import', '.template', '.tmpl', '.snippet', '.frag', '.vert',
+        '.plist', '.strings', '.po', '.pot', '.mo', '.resx', '.resources',
+    )
+    
+    if att.path.lower().endswith(text_extensions):
         return True
     
     # Content-Type check for URL responses

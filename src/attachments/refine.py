@@ -146,7 +146,7 @@ def format_tables(att: Attachment) -> Attachment:
     return att
 
 @refiner
-def tile_images(input_obj: Union['AttachmentCollection', Attachment]) -> Attachment:
+def tile_images(input_obj: Union[Attachment, 'AttachmentCollection']) -> Attachment:
     """Combine multiple images into a tiled grid.
     
     Works with:
@@ -562,10 +562,10 @@ def _detect_language(file_ext: str) -> str:
     """Detect programming language from file extension."""
     language_map = {
         '.py': 'Python',
-        '.js': 'JavaScript', 
+        '.js': 'JavaScript',
         '.ts': 'TypeScript',
-        '.jsx': 'JSX',
         '.tsx': 'TSX',
+        '.jsx': 'JSX',
         '.java': 'Java',
         '.c': 'C',
         '.cpp': 'C++',

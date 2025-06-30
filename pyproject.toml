@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "attachments"
-version = "0.16.0a1"
+version = "0.17.0a1"
 authors = [
   { name="Maxime Rivest", email="mrive052@gmail.com" },
 ]
@@ -103,6 +103,7 @@ pdf = [
 extended = [
     "pillow-heif>=0.22.0",   # HEIF image support
     "pytesseract>=0.3.10",   # OCR support
+    "copykitten>=1.0.0",     # Cross-platform clipboard support
 ]
 
 # Browser automation for web content
@@ -123,6 +124,7 @@ most = [
     # Extended format support
     "pillow-heif>=0.22.0",
     "pytesseract>=0.3.10",
+    "copykitten>=1.0.0",     # Cross-platform clipboard support
     # Additional PDF support
     "pypdf>=5.0.0",
     "pypdfium2>=4.26.0",

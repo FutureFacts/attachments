@@ -21,7 +21,19 @@ def directory_to_structure(att: Attachment) -> Attachment:
     max_files = int(att.commands.get('max_files', '1000'))
     glob_pattern = att.commands.get('glob', '')
     recursive = att.commands.get('recursive', 'true').lower() == 'true'
-    process_files = att.commands.get('files', 'false').lower() == 'true'
+    
+    # New: check for mode=code or format=code
+    mode_command = att.commands.get('mode')
+    is_code_mode = mode_command == 'code' or att.commands.get('format') == 'code'
+    files_command = att.commands.get('files')
+
+    if files_command is not None:
+        process_files = files_command.lower() == 'true'
+    elif is_code_mode:
+        process_files = True
+    else:
+        process_files = False  # Default for directories is structure-only
+    
     dirs_only_with_files = att.commands.get('dirs_only_with_files', 'true').lower() == 'true'
     
     # Initialize ignore_patterns to avoid UnboundLocalError
@@ -169,7 +181,7 @@ def directory_to_structure(att: Attachment) -> Attachment:
         all_files = files
     else:
         # Collect files from directory
-        all_files = collect_files(base_path, ignore_patterns, max_files, glob_pattern, recursive, include_binary=True)
+        all_files = collect_files(base_path, ignore_patterns, max_files, glob_pattern, recursive, include_binary=not is_code_mode)
     
     if process_files:
         files = all_files

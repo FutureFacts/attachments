@@ -190,7 +190,12 @@ class Attachments:
                         # Process individual files and apply splitter to each
                         for file_path in files:
                             try:
-                                file_result = self._auto_process(attach(file_path))
+                                # Inherit commands from the parent directory attachment
+                                file_att = attach(file_path)
+                                file_att.commands.update(result.commands)
+                                
+                                file_result = self._auto_process(file_att)
+
                                 # Apply splitter to individual file (inherit from directory DSL)
                                 self._apply_splitter_and_add_to_list(file_result, splitter_func, self.attachments, path)
                             except Exception as e:

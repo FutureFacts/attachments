@@ -214,8 +214,9 @@ from . import csv_processor
 from . import vector_graphics_processor
 from . import example_processors
 from . import ipynb_processor
+from . import code_processor
 
 __all__ = [
     'processor', 'processors', 'find_primary_processor', 'find_named_processor',
-    'list_available_processors', 'ProcessorRegistry', 'ProcessorInfo'
+    'list_available_processors', 'ProcessorRegistry', 'ProcessorInfo',
 ] 

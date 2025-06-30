@@ -390,3 +390,102 @@ def agno(input_obj: Union[Attachment, AttachmentCollection], prompt: str = "") -
     
     return result
 
+@adapter
+def to_clipboard_text(input_obj: Union[Attachment, AttachmentCollection], prompt: str = "") -> None:
+    """Copy the text content of the attachment(s) to the clipboard, optionally with a prompt."""
+    att = _handle_collection(input_obj)
+    
+    try:
+        import copykitten
+        
+        # Handle prompt - check DSL commands first, then parameter
+        dsl_prompt = att.commands.get('prompt', '')
+        effective_prompt = prompt or dsl_prompt
+        
+        # Combine prompt and text content
+        content_parts = []
+        if effective_prompt:
+            content_parts.append(effective_prompt)
+        if att.text:
+            content_parts.append(att.text)
+        
+        final_content = "\n\n".join(content_parts) if content_parts else ""
+        
+        copykitten.copy(final_content)
+        
+        if effective_prompt:
+            print(f"📋 Text with prompt (length: {len(final_content)}) copied to clipboard.")
+        else:
+            print(f"📋 Text (length: {len(final_content)}) copied to clipboard.")
+        
+    except ImportError:
+        raise ImportError(
+            "Clipboard adapters require 'copykitten' to be installed.\n\n"
+            "Install with:\n"
+            "  pip install copykitten\n"
+            "  # or\n"
+            "  uv add copykitten"
+        )
+    except Exception as e:
+        print(f"⚠️ Could not copy text to clipboard: {e}")
+
+@adapter
+def to_clipboard_image(input_obj: Union[Attachment, AttachmentCollection]) -> None:
+    """Copy the first image of the attachment(s) to the clipboard."""
+    att = _handle_collection(input_obj)
+    
+    if not att.images:
+        print("⚠️ No images found to copy.")
+        return
+        
+    try:
+        import copykitten
+        from PIL import Image
+        import base64
+        import io
+
+        # Get the first image (it's a base64 data URL)
+        img_b64 = att.images[0]
+        
+        if img_b64.startswith('data:image/'):
+            img_data_b64 = img_b64.split(',', 1)[1]
+        else:
+            img_data_b64 = img_b64
+            
+        img_data = base64.b64decode(img_data_b64)
+        img = Image.open(io.BytesIO(img_data))
+        
+        # copykitten expects RGBA format
+        if img.mode != 'RGBA':
+            img = img.convert('RGBA')
+            
+        # Get raw pixel data
+        pixels = img.tobytes()
+        
+        copykitten.copy_image(pixels, img.width, img.height)
+        print(f"📋 Image ({img.width}x{img.height}) copied to clipboard.")
+
+    except ImportError:
+        raise ImportError(
+            "Clipboard adapters require 'copykitten' and 'Pillow' to be installed.\n\n"
+            "Install with:\n"
+            "  pip install copykitten Pillow\n"
+            "  # or\n"
+            "  uv add copykitten Pillow"
+        )
+    except Exception as e:
+        print(f"⚠️ Could not copy image to clipboard: {e}")
+
+
+
+
+from attachments import Attachments, set_verbose
+set_verbose(False)
+
+# Process a directory using the format:code command
+dsl = "[files:true][format:code]"   
+a = Attachments("/home/maxime/Projects/metakeyaiv2/apps/metakey-desktop/src/" + dsl)
+
+# Copy to clipboard with a prompt
+a.to_clipboard_text("What is wrong with my app?")
+# out>>> 📋 Text with prompt (length: 67023) copied to clipboard.
