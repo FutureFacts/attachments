@@ -24,6 +24,9 @@ def get_ignore_patterns(base_path: str, ignore_command: str) -> List[str]:
             'env', 'env/*', '**/env/*',
             # Node.js
             'node_modules', 'node_modules/*', '**/node_modules/*',
+            # Package manager lock files
+            'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml',
+            'Cargo.lock', 'poetry.lock', 'Pipfile.lock',
             # Environment files
             '.env', '.env.*',
             # Logs and temporary files
@@ -31,13 +34,19 @@ def get_ignore_patterns(base_path: str, ignore_command: str) -> List[str]:
             # OS files
             '.DS_Store', 'Thumbs.db',
             # Build directories
-            'dist', 'build', 'target',
+            'dist', 'build', 'target', 'out', 'release',
+            # Rust specific
+            'target/*', '**/target/*',
             # IDE files
             '.idea', '.vscode',
             # Test and coverage
             '.pytest_cache', '.coverage',
             # Package directories
-            '*.egg-info', '*.dist-info'
+            '*.egg-info', '*.dist-info',
+            # Additional common patterns
+            'tmp', 'temp', '*.swp', '*.swo',
+            # Dependency directories
+            'vendor', 'bower_components'
         ]
     elif ignore_command == 'minimal':
         return [
@@ -88,7 +97,50 @@ def get_ignore_patterns(base_path: str, ignore_command: str) -> List[str]:
         return get_ignore_patterns(base_path, 'standard')
     elif ignore_command:
         # Custom comma-separated patterns
-        return [pattern.strip() for pattern in ignore_command.split(',')]
+        # Check for special flags
+        patterns = [pattern.strip() for pattern in ignore_command.split(',')]
+        
+        # Check for 'raw' flag - if present, use ONLY the specified patterns (no essentials)
+        if 'raw' in patterns:
+            # Remove 'raw' from patterns and return only user patterns
+            custom_patterns = [p for p in patterns if p != 'raw']
+            # Special case: 'raw,none' means truly ignore nothing
+            if 'none' in custom_patterns:
+                return []
+            return custom_patterns
+        
+        # Check for 'none' flag - if present, use auto-detection (gitignore or standard)
+        if 'none' in patterns:
+            return get_ignore_patterns(base_path, 'auto')
+        
+        # Default behavior: include essential patterns + custom patterns (safe and intuitive)
+        custom_patterns = patterns
+        
+        # Include essential patterns that should normally never be processed
+        essential_patterns = [
+            # Hidden files and directories (massive and rarely useful for LLMs)
+            '.*', '.*/.*',
+            # Git (always exclude - massive and not useful for LLMs) 
+            '.git', '.git/*', '**/.git/*',
+            # Python bytecode (always exclude - binary and not useful)
+            '__pycache__', '__pycache__/*', '**/__pycache__/*',
+            '*.pyc', '*.pyo', '*.pyd',
+            # Virtual environments (always exclude - massive dependency folders)
+            '.venv', '.venv/*', '**/.venv/*',
+            'venv', 'venv/*', '**/venv/*',
+            'env', 'env/*', '**/env/*',
+            # Node.js (always exclude - massive dependency folder)
+            'node_modules', 'node_modules/*', '**/node_modules/*',
+            # Lock files (always exclude - not useful for LLMs)
+            'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml',
+            'Cargo.lock', 'poetry.lock', 'Pipfile.lock',
+            # Build directories (always exclude - generated content)
+            'dist', 'build', 'target', 'out', 'release',
+            # OS files (always exclude - not useful)
+            '.DS_Store', 'Thumbs.db',
+        ]
+        
+        return essential_patterns + custom_patterns
     else:
         # No ignore patterns
         return []

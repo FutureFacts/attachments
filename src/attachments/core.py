@@ -514,46 +514,45 @@ class Attachment:
         if not self.attachy:
             return "", {}
         
+        import re
+        
         path_str = self.attachy
         commands_list = [] # Store as list to preserve order, then convert to dict
         
-        # Regex to find a command [key:value] at the very END of the string.
-        # Value part [^\[\]]* ensures it doesn't jump over other commands or include brackets.
-        command_pattern_at_end = re.compile(r"\[([a-zA-Z0-9_-]+):([^\[\]]*)\]$")
+        # Enhanced regex patterns to find commands anywhere in the string
+        # Regex to find a command [key:value] anywhere in the string
+        command_pattern = re.compile(r"\[([a-zA-Z0-9_-]+):([^\[\]]*)\]")
         
-        # Regex to find shorthand page selection [1,3-5,-1] at the very END of the string.
-        # This matches patterns like [3-5], [1,3-5], [1,3-5,-1], etc.
-        page_shorthand_pattern = re.compile(r"\[([0-9,-]+)\]$")
+        # Regex to find shorthand page selection [1,3-5,-1] anywhere in the string
+        page_shorthand_pattern = re.compile(r"\[([0-9,-]+)\]")
         
+        # Find all commands first
         temp_path_str = path_str
-        while True:
-            # First try to match regular [key:value] commands
-            match = command_pattern_at_end.search(temp_path_str)
-            if match:
-                key = match.group(1).strip()
-                value = match.group(2).strip()
-                commands_list.append((key, value))
-                # Update path_str to be the part before the matched command
-                temp_path_str = temp_path_str[:match.start()].strip()
-                continue
-            
-            # If no regular command found, try shorthand page selection
-            page_match = page_shorthand_pattern.search(temp_path_str)
-            if page_match:
-                page_value = page_match.group(1).strip()
-                # Convert shorthand [3-5] to [pages:3-5]
-                commands_list.append(('pages', page_value))
-                # Update path_str to be the part before the matched command
-                temp_path_str = temp_path_str[:page_match.start()].strip()
-                continue
-            
-            # No more patterns found
-            break
         
-        # Commands were parsed from right to left, so reverse for correct order in dictionary
-        # For multiple commands with the same key, the rightmost one (last parsed) will win due to dict conversion.
-        final_commands = dict(reversed(commands_list))
+        # First pass: extract all regular [key:value] commands
+        for match in command_pattern.finditer(path_str):
+            key = match.group(1).strip()
+            value = match.group(2).strip()
+            commands_list.append((key, value))
+        
+        # Remove all regular commands from the string
+        temp_path_str = command_pattern.sub('', temp_path_str)
+        
+        # Second pass: extract shorthand page commands that aren't regular commands
+        for match in page_shorthand_pattern.finditer(temp_path_str):
+            page_value = match.group(1).strip()
+            # Only add if it's not empty and looks like page numbers
+            if page_value and re.match(r'^[0-9,-]+$', page_value):
+                commands_list.append(('pages', page_value))
+        
+        # Remove shorthand page commands from the string
+        temp_path_str = page_shorthand_pattern.sub('', temp_path_str)
+        
+        # Clean up the final path
         final_path = temp_path_str.strip()
+        
+        # Convert commands list to dict (later commands override earlier ones)
+        final_commands = dict(commands_list)
         
         if final_commands:
             verbose_log(f"Parsed commands for '{self.attachy}': {final_commands}")
