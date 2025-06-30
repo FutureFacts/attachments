@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "attachments"
-version = "0.17.0a1"
+version = "0.17.0"
 authors = [
   { name="Maxime Rivest", email="mrive052@gmail.com" },
 ]
@@ -36,8 +36,9 @@ dependencies = [
     "pillow>=11.2.1",
     "pydantic>=2.11.5",
     "pdfplumber>=0.11.6",
-    "pillow-heif>=0.22.0",
-    "nbformat>=5.10.4"  # For IPYNB notebook processing
+    "pillow-heif>=0.22.0", # For IPYNB notebook processing
+    "nbformat>=5.10.4",
+    "copykitten>=1.2.2",
 ]
 
 [project.urls]
