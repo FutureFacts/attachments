@@ -1,9 +1,6 @@
 # This file will contain the logic for processing IPYNB files.
 # It will include a matcher, loader, presenter, and processor for IPYNB files.
 
-from attachments.core import Attachment
-
-import nbformat
 from attachments.core import Attachment, loader
 
 def ipynb_match(att: Attachment) -> bool:
@@ -13,16 +10,23 @@ def ipynb_match(att: Attachment) -> bool:
 @loader(match=ipynb_match)
 def ipynb_loader(att: Attachment) -> Attachment:
     """Loads and parses an IPYNB file."""
+    try:
+        import nbformat
+    except ImportError:
+        raise ImportError(
+            "nbformat is required for Jupyter notebook processing.\n"
+            "Install with: pip install nbformat"
+        )
+    
     with open(att.input_source, "r", encoding="utf-8") as f:
         notebook = nbformat.read(f, as_version=4)
     att._obj = notebook
     return att
 
 from attachments.core import presenter
-from nbformat.notebooknode import NotebookNode # Reverted import
 
-@presenter
-def ipynb_text_presenter(att: Attachment, notebook: NotebookNode) -> Attachment:
+@presenter  
+def ipynb_text_presenter(att: Attachment, notebook) -> Attachment:
     """Presents the IPYNB content as text."""
     full_content_blocks = []
     for cell in notebook.cells:
