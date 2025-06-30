@@ -475,17 +475,3 @@ def to_clipboard_image(input_obj: Union[Attachment, AttachmentCollection]) -> No
         )
     except Exception as e:
         print(f"⚠️ Could not copy image to clipboard: {e}")
-
-
-
-
-from attachments import Attachments, set_verbose
-set_verbose(False)
-
-# Process a directory using the format:code command
-dsl = "[files:true][format:code]"   
-a = Attachments("/home/maxime/Projects/metakeyaiv2/apps/metakey-desktop/src/" + dsl)
-
-# Copy to clipboard with a prompt
-a.to_clipboard_text("What is wrong with my app?")
-# out>>> 📋 Text with prompt (length: 67023) copied to clipboard.
