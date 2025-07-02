@@ -215,6 +215,7 @@ from . import vector_graphics_processor
 from . import example_processors
 from . import ipynb_processor
 from . import code_processor
+from . import report_processor
 
 __all__ = [
     'processor', 'processors', 'find_primary_processor', 'find_named_processor',

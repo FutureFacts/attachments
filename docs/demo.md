@@ -14,6 +14,7 @@ The full demo video is also available as an MP4: [demo.mp4](https://github.com/M
 - **PowerPoint slides**: Process PPTX files with slide-specific extraction
 - **Web scraping**: Use CSS selectors to extract specific content from web pages
 - **Image processing**: Handle various image formats with transformations
+- **Project analysis**: Generate detailed file reports with character and line counts
 - **LLM integration**: Send processed content directly to OpenAI and Claude APIs
 
 ## Try it yourself:
@@ -27,10 +28,16 @@ pptx = Attachments("https://github.com/MaximeRivest/attachments/raw/main/src/att
 
 print(f"PDF text length: {len(str(pdf))}")
 print(f"PPTX images extracted: {len(pptx.images)}")
+
+# Generate a detailed project report
+report = Attachments("src/[mode:report][files:true][force:true]")
+print("📊 Project Analysis:")
+print(report.text)
 ```
 
 ```{seealso}
 - {doc}`examples/how_to_load_and_morph` - Detailed tutorial on URL processing
 - {doc}`examples/pptx_split_demo` - PowerPoint processing examples
+- {doc}`examples/project_analysis_report` - **NEW!** Project analysis with report mode
 - {doc}`dsl_cheatsheet` - Complete DSL command reference
 ``` 

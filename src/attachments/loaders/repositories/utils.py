@@ -18,15 +18,20 @@ def get_ignore_patterns(base_path: str, ignore_command: str) -> List[str]:
             # Python
             '__pycache__', '__pycache__/*', '**/__pycache__/*',
             '*.pyc', '*.pyo', '*.pyd',
-            # Virtual environments
+            # Virtual environments (comprehensive patterns)
             '.venv', '.venv/*', '**/.venv/*',
             'venv', 'venv/*', '**/venv/*',
             'env', 'env/*', '**/env/*',
+            # Additional Python environment patterns
+            'python-env', 'python-env/*', '**/python-env/*',
+            '*-env', '*-env/*', '**/*-env/*',
+            'site-packages', 'site-packages/*', '**/site-packages/*',
+            'pyvenv.cfg',
             # Node.js
             'node_modules', 'node_modules/*', '**/node_modules/*',
             # Package manager lock files
             'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml',
-            'Cargo.lock', 'poetry.lock', 'Pipfile.lock',
+            'Cargo.lock', 'poetry.lock', 'Pipfile.lock', 'uv.lock',
             # Environment files
             '.env', '.env.*',
             # Logs and temporary files
@@ -34,7 +39,7 @@ def get_ignore_patterns(base_path: str, ignore_command: str) -> List[str]:
             # OS files
             '.DS_Store', 'Thumbs.db',
             # Build directories
-            'dist', 'build', 'target', 'out', 'release',
+            'dist', 'build', 'target', 'out', 'release', '_build'
             # Rust specific
             'target/*', '**/target/*',
             # IDE files
@@ -46,7 +51,15 @@ def get_ignore_patterns(base_path: str, ignore_command: str) -> List[str]:
             # Additional common patterns
             'tmp', 'temp', '*.swp', '*.swo',
             # Dependency directories
-            'vendor', 'bower_components'
+            'vendor', 'bower_components',
+            # Large binary/resource directories that are rarely useful for LLMs
+            'resources/binaries', 'resources/binaries/*', '**/resources/binaries/*',
+            'bin', 'bin/*', '**/bin/*',
+            # Cache directories
+            'cache', 'cache/*', '**/cache/*',
+            '.cache', '.cache/*', '**/.cache/*',
+            # Documentation build outputs
+            'docs/_build', 'docs/_build/*', '**/docs/_build/*'
         ]
     elif ignore_command == 'minimal':
         return [
@@ -129,13 +142,17 @@ def get_ignore_patterns(base_path: str, ignore_command: str) -> List[str]:
             '.venv', '.venv/*', '**/.venv/*',
             'venv', 'venv/*', '**/venv/*',
             'env', 'env/*', '**/env/*',
+            # Additional critical Python environment patterns
+            'python-env', 'python-env/*', '**/python-env/*',
+            '*-env', '*-env/*', '**/*-env/*',
+            'site-packages', 'site-packages/*', '**/site-packages/*',
             # Node.js (always exclude - massive dependency folder)
             'node_modules', 'node_modules/*', '**/node_modules/*',
             # Lock files (always exclude - not useful for LLMs)
             'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml',
-            'Cargo.lock', 'poetry.lock', 'Pipfile.lock',
+            'Cargo.lock', 'poetry.lock', 'Pipfile.lock', 'uv.lock',
             # Build directories (always exclude - generated content)
-            'dist', 'build', 'target', 'out', 'release',
+            'dist', 'build', 'target', 'out', 'release', '_build'
             # OS files (always exclude - not useful)
             '.DS_Store', 'Thumbs.db',
         ]
