@@ -233,9 +233,9 @@ class AttachmentCollection:
         # Check if it's a refiner that works on collections
         if hasattr(operation, 'name'):
             reducing_operations = {
-                'tile_images', 'combine_images', 'merge_text', 
+                'tile_images', 'combine_images', 'merge_text',
                 'report_unused_commands',
-                'claude', 'openai_chat', 'openai_response'  # Adapters are always reducers
+                'claude', 'openai_chat', 'openai_responses'  # Adapters are always reducers
             }
             return operation.name in reducing_operations
         return False
