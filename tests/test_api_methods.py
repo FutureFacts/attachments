@@ -4,7 +4,7 @@ import pytest
 import tempfile
 from pathlib import Path
 
-from attachments import Attachments
+from attachments import Attachments, auto_attach
 
 
 @pytest.fixture
@@ -143,3 +143,20 @@ def test_multiple_files_api():
     finally:
         for file_path in files:
             Path(file_path).unlink(missing_ok=True) 
+
+def test_auto_attach_detects_files_and_prepends_prompt():
+    """auto_attach should detect file references and prepend the prompt."""
+    prompt = "Summarize sample.txt"
+    root_dir = "src/attachments/data"
+    ctx = auto_attach(prompt, root_dir=root_dir)
+
+    # Should return an Attachments-like object with the sample file
+    assert isinstance(ctx, Attachments)
+    assert len(ctx) == 1
+    assert ctx[0].path.endswith("sample.txt")
+
+    combined = ctx.text
+    assert combined.startswith(prompt)
+    # After the prompt, the file content should appear
+    after_prompt = combined[len(prompt):].lstrip()
+    assert after_prompt.startswith("Welcome to the Attachments Library!")
