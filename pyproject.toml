@@ -48,6 +48,9 @@ dependencies = [
 "Bug Tracker" = "https://github.com/maximrivest/attachments/issues"
 "Changelog" = "https://maximerivest.github.io/attachments/changelog.html"
 
+[project.scripts]
+attachments = "attachments.cli:main"
+
 [project.optional-dependencies]
 # Development dependencies
 dev = [
