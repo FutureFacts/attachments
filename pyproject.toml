@@ -4,10 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "attachments"
-version = "0.20.0"
-authors = [
-  { name="Maxime Rivest", email="mrive052@gmail.com" },
-]
+version = "0.21.0"
+authors = [{ name = "Maxime Rivest", email = "mrive052@gmail.com" }]
 description = "The Python funnel for LLM context - turn any file into model-ready text + images, in one line."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -26,19 +24,31 @@ classifiers = [
     "Topic :: Text Processing",
     "Topic :: Multimedia",
 ]
-keywords = ["llm", "ai", "pdf", "document", "multimodal", "openai", "claude" , "context", "attachments"]
+keywords = [
+    "llm",
+    "ai",
+    "pdf",
+    "document",
+    "multimodal",
+    "openai",
+    "claude",
+    "context",
+    "attachments",
+]
 
 # Core dependencies for the modular architecture
 dependencies = [
     # Core file processing
-    "requests>=2.25.0", # HTTP library for URL processing and web content
+    "requests>=2.25.0",      # HTTP library for URL processing and web content
     "beautifulsoup4>=4.9.0", # HTML parsing for web content and HTML files
     "pillow>=11.2.1",
     "pydantic>=2.11.5",
     "pdfplumber>=0.11.6",
-    "pillow-heif>=0.22.0", # For IPYNB notebook processing
+    "pillow-heif>=0.22.0",   # For IPYNB notebook processing
     "nbformat>=5.10.4",
     "copykitten>=1.2.2",
+    "typer>=0.12",
+    "pyperclip>=1.8",
 ]
 
 [project.urls]
@@ -49,7 +59,9 @@ dependencies = [
 "Changelog" = "https://maximerivest.github.io/attachments/changelog.html"
 
 [project.scripts]
-attachments = "attachments.cli:main"
+attachments = "attachments.cli:app"
+att = "attachments.cli:app"
+
 
 [project.optional-dependencies]
 # Development dependencies
@@ -66,54 +78,52 @@ dev = [
     "jupytext>=1.16.0",
     "sphinx>=7.0.0",
     "sphinx-autodoc2>=0.5.0",
-    "ipykernel>=6.29.5",  # For Jupyter notebook execution
+    "ipykernel>=6.29.5",       # For Jupyter notebook execution
 ]
 
 
 # Common file formats (most users will want these)
 common = [
-    "pandas>=2.0.0",           # Data analysis and CSV processing
-    "Pillow>=10.0.0",          # Image processing and conversion
-    "pdfplumber>=0.10.0",      # PDF text and table extraction
-    "python-pptx>=1.0.2",      # PowerPoint (.pptx) processing
-    "python-docx>=1.1.0",     # Word (.docx) processing
-    "openpyxl>=3.1.0",        # Excel (.xlsx) processing
-    "pypdfium2>=4.0.0",       # PDF rendering for images (DOCX, PDF visual conversion)
+    "pandas>=2.0.0",      # Data analysis and CSV processing
+    "Pillow>=10.0.0",     # Image processing and conversion
+    "pdfplumber>=0.10.0", # PDF text and table extraction
+    "python-pptx>=1.0.2", # PowerPoint (.pptx) processing
+    "python-docx>=1.1.0", # Word (.docx) processing
+    "openpyxl>=3.1.0",    # Excel (.xlsx) processing
+    "pypdfium2>=4.0.0",   # PDF rendering for images (DOCX, PDF visual conversion)
 ]
 
 # Microsoft Office formats
 office = [
-    "python-pptx>=0.6.0",     # PowerPoint (.pptx) processing
-    "python-docx>=1.1.0",     # Word (.docx) processing
-    "openpyxl>=3.1.0",        # Excel (.xlsx) processing
+    "python-pptx>=0.6.0", # PowerPoint (.pptx) processing
+    "python-docx>=1.1.0", # Word (.docx) processing
+    "openpyxl>=3.1.0",    # Excel (.xlsx) processing
 ]
 
 # 3D model rendering and processing
 3d = [
-    "bpy>=4.4.0; python_version >= '3.11' and python_version < '3.12'",  # Blender Python API (requires Python 3.11)
-    "trimesh>=4.3.0",         # Lightweight 3D mesh processing (fallback for Python 3.12)
-    "pyrender>=0.1.45",       # OpenGL-based rendering (fallback for Python 3.12)
-    "numpy>=1.24.0",          # Required for 3D math operations
+    "bpy>=4.4.0; python_version >= '3.11' and python_version < '3.12'", # Blender Python API (requires Python 3.11)
+    "trimesh>=4.3.0",                                                   # Lightweight 3D mesh processing (fallback for Python 3.12)
+    "pyrender>=0.1.45",                                                 # OpenGL-based rendering (fallback for Python 3.12)
+    "numpy>=1.24.0",                                                    # Required for 3D math operations
 ]
 
 # PDF processing (MIT-compatible)
 pdf = [
-    "pdfplumber>=0.7.0",      # Primary PDF library
-    "pypdf>=5.0.0",           # Pure Python PDF library (BSD license)
-    "pypdfium2>=4.26.0",     # Google's PDFium Python binding (BSD/Apache)
+    "pdfplumber>=0.7.0", # Primary PDF library
+    "pypdf>=5.0.0",      # Pure Python PDF library (BSD license)
+    "pypdfium2>=4.26.0", # Google's PDFium Python binding (BSD/Apache)
 ]
 
 # Extended file format support
 extended = [
-    "pillow-heif>=0.22.0",   # HEIF image support
-    "pytesseract>=0.3.10",   # OCR support
-    "copykitten>=1.0.0",     # Cross-platform clipboard support
+    "pillow-heif>=0.22.0", # HEIF image support
+    "pytesseract>=0.3.10", # OCR support
+    "copykitten>=1.0.0",   # Cross-platform clipboard support
 ]
 
 # Browser automation for web content
-browser = [
-    "playwright>=1.43.0",
-]
+browser = ["playwright>=1.43.0"]
 
 # All dependencies (comprehensive installation)
 most = [
@@ -128,7 +138,7 @@ most = [
     # Extended format support
     "pillow-heif>=0.22.0",
     "pytesseract>=0.3.10",
-    "copykitten>=1.0.0",     # Cross-platform clipboard support
+    "copykitten>=1.0.0",   # Cross-platform clipboard support
     # Additional PDF support
     "pypdf>=5.0.0",
     "pypdfium2>=4.26.0",
@@ -195,14 +205,7 @@ warn_unreachable = true
 strict_equality = true
 
 [[tool.mypy.overrides]]
-module = [
-    "PIL.*",
-    "pandas.*",
-    "numpy.*",
-    "docx.*",
-    "pptx.*",
-    "odf.*",
-]
+module = ["PIL.*", "pandas.*", "numpy.*", "docx.*", "pptx.*", "odf.*"]
 ignore_missing_imports = true
 
 # Pytest configuration
@@ -219,10 +222,10 @@ addopts = [
     "--cov-report=term-missing",
     "--cov-report=html:htmlcov",
     "--cov-report=xml",
-    "--cov-fail-under=70",  # Lowered from 90 for now, will increase as we add tests
-    "--ignore=mrplay",  # Explicitly ignore mrplay directory
-    "-v",  # Verbose output by default
-    "--disable-warnings",  # Disable all warnings
+    "--cov-fail-under=70",       # Lowered from 90 for now, will increase as we add tests
+    "--ignore=mrplay",           # Explicitly ignore mrplay directory
+    "-v",                        # Verbose output by default
+    "--disable-warnings",        # Disable all warnings
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
@@ -230,21 +233,12 @@ markers = [
     "unit: marks tests as unit tests",
     "contract: marks tests as contract tests (slower, more comprehensive)",
 ]
-filterwarnings = [
-    "ignore::DeprecationWarning",
-    "ignore::UserWarning",
-]
+filterwarnings = ["ignore::DeprecationWarning", "ignore::UserWarning"]
 
 # Coverage configuration
 [tool.coverage.run]
 source = ["src"]
-omit = [
-    "*/tests/*",
-    "*/test_*",
-    "*/__main__.py",
-    "*/setup.py",
-    "*/conftest.py",
-]
+omit = ["*/tests/*", "*/test_*", "*/__main__.py", "*/setup.py", "*/conftest.py"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -261,7 +255,4 @@ exclude_lines = [
 ]
 
 [dependency-groups]
-dev = [
-    "mystmd>=1.3.6",
-    "pytest>=8.3.5",
-]
+dev = ["mystmd>=1.3.6", "pytest>=8.3.5"]
