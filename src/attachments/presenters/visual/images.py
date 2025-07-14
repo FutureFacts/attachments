@@ -83,24 +83,24 @@ def images(att: Attachment, doc: 'docx.Document') -> Attachment:
                 raise RuntimeError("LibreOffice/soffice not found. Install LibreOffice to convert DOCX to PDF.")
             
             # Create temporary directory for PDF output
-            temp_dir = tempfile.mkdtemp()
-            docx_path_obj = Path(docx_path)
-            
-            # Run LibreOffice conversion
-            subprocess.run(
-                [soffice, "--headless", "--convert-to", "pdf", "--outdir", temp_dir, str(docx_path_obj)],
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                timeout=60  # 60 second timeout
-            )
-            
-            # Find the generated PDF
-            pdf_path = Path(temp_dir) / (docx_path_obj.stem + ".pdf")
-            if not pdf_path.exists():
-                raise RuntimeError(f"PDF conversion failed - output file not found: {pdf_path}")
-            
-            return str(pdf_path)
+            with tempfile.TemporaryDirectory() as temp_dir:
+                docx_path_obj = Path(docx_path)
+                
+                # Run LibreOffice conversion
+                subprocess.run(
+                    [soffice, "--headless", "--convert-to", "pdf", "--outdir", temp_dir, str(docx_path_obj)],
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    timeout=60  # 60 second timeout
+                )
+                
+                # Find the generated PDF
+                pdf_path = Path(temp_dir) / (docx_path_obj.stem + ".pdf")
+                if not pdf_path.exists():
+                    raise RuntimeError(f"PDF conversion failed - output file not found: {pdf_path}")
+                
+                return str(pdf_path)
         
         # Convert DOCX to PDF
         if not att.path:
@@ -351,22 +351,22 @@ def images(att: Attachment, pres: 'pptx.Presentation') -> Attachment:
                 raise RuntimeError("LibreOffice/soffice not found. Install LibreOffice to convert PPTX to PDF.")
             
             # Create temporary directory for PDF output
-            temp_dir = tempfile.mkdtemp()
-            pptx_path_obj = Path(pptx_path)
-            
-            # Run LibreOffice conversion
-            subprocess.run(
-                [soffice, "--headless", "--convert-to", "pdf", "--outdir", temp_dir, str(pptx_path_obj)],
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                timeout=60  # 60 second timeout
-            )
-            
-            # Find the generated PDF
-            pdf_path = Path(temp_dir) / (pptx_path_obj.stem + ".pdf")
-            if not pdf_path.exists():
-                raise RuntimeError(f"PDF conversion failed - output file not found: {pdf_path}")
+            with tempfile.TemporaryDirectory() as temp_dir:
+                pptx_path_obj = Path(pptx_path)
+                
+                # Run LibreOffice conversion
+                subprocess.run(
+                    [soffice, "--headless", "--convert-to", "pdf", "--outdir", temp_dir, str(pptx_path_obj)],
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    timeout=60  # 60 second timeout
+                )
+                
+                # Find the generated PDF
+                pdf_path = Path(temp_dir) / (pptx_path_obj.stem + ".pdf")
+                if not pdf_path.exists():
+                    raise RuntimeError(f"PDF conversion failed - output file not found: {pdf_path}")
             
             return str(pdf_path)
         
@@ -484,24 +484,24 @@ def images(att: Attachment, workbook: 'openpyxl.Workbook') -> Attachment:
                 raise RuntimeError("LibreOffice/soffice not found. Install LibreOffice to convert Excel to PDF.")
             
             # Create temporary directory for PDF output
-            temp_dir = tempfile.mkdtemp()
-            excel_path_obj = Path(excel_path)
-            
-            # Run LibreOffice conversion
-            subprocess.run(
-                [soffice, "--headless", "--convert-to", "pdf", "--outdir", temp_dir, str(excel_path_obj)],
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                timeout=60  # 60 second timeout
-            )
-            
-            # Find the generated PDF
-            pdf_path = Path(temp_dir) / (excel_path_obj.stem + ".pdf")
-            if not pdf_path.exists():
-                raise RuntimeError(f"PDF conversion failed - output file not found: {pdf_path}")
-            
-            return str(pdf_path)
+            with tempfile.TemporaryDirectory() as temp_dir:
+                excel_path_obj = Path(excel_path)
+                
+                # Run LibreOffice conversion
+                subprocess.run(
+                    [soffice, "--headless", "--convert-to", "pdf", "--outdir", temp_dir, str(excel_path_obj)],
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    timeout=60  # 60 second timeout
+                )
+                
+                # Find the generated PDF
+                pdf_path = Path(temp_dir) / (excel_path_obj.stem + ".pdf")
+                if not pdf_path.exists():
+                    raise RuntimeError(f"PDF conversion failed - output file not found: {pdf_path}")
+                
+                return str(pdf_path)
         
         # Convert Excel to PDF
         if not att.path:
