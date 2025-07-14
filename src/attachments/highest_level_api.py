@@ -276,7 +276,7 @@ class Attachments:
                     with open(att.path, 'r', encoding='utf-8', errors='ignore') as f:
                         loaded.text = f.read()
                         loaded._obj = loaded.text
-            except:
+            except (IOError, OSError, UnicodeDecodeError):
                 loaded.text = f"Could not read file: {att.path}"
         
         # Handle collections differently

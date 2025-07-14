@@ -158,7 +158,7 @@ def images(att: Attachment, doc: 'docx.Document') -> Attachment:
             try:
                 os.unlink(pdf_path)
                 os.rmdir(os.path.dirname(pdf_path))
-            except:
+            except (OSError, IOError):
                 pass  # Ignore cleanup errors
         
         # Add images to attachment
@@ -301,7 +301,7 @@ def thumbnails(att: Attachment, pdf: 'pdfplumber.PDF') -> Attachment:
             if 1 <= page_num <= len(pdf.pages):
                 # Placeholder for PDF page thumbnail
                 att.images.append(f"thumbnail_page_{page_num}_base64_placeholder")
-    except:
+    except Exception:
         pass
     
     return att
@@ -315,7 +315,7 @@ def contact_sheet(att: Attachment, pres: 'pptx.Presentation') -> Attachment:
         if slide_indices:
             # Placeholder for contact sheet
             att.images.append("contact_sheet_base64_placeholder")
-    except:
+    except Exception:
         pass
     
     return att
@@ -426,7 +426,7 @@ def images(att: Attachment, pres: 'pptx.Presentation') -> Attachment:
             try:
                 os.unlink(pdf_path)
                 os.rmdir(os.path.dirname(pdf_path))
-            except:
+            except (OSError, IOError):
                 pass  # Ignore cleanup errors
         
         # Add images to attachment
@@ -559,7 +559,7 @@ def images(att: Attachment, workbook: 'openpyxl.Workbook') -> Attachment:
             try:
                 os.unlink(pdf_path)
                 os.rmdir(os.path.dirname(pdf_path))
-            except:
+            except (OSError, IOError):
                 pass  # Ignore cleanup errors
         
         # Add images to attachment
@@ -669,7 +669,7 @@ def images(att: Attachment, svg_doc: 'SVGDocument') -> Attachment:
                             # Clean up temp file
                             try:
                                 os.unlink(temp_html_path)
-                            except:
+                            except (OSError, IOError):
                                 pass
                     
                     # Handle async execution properly
@@ -899,7 +899,7 @@ def images(att: Attachment, soup: 'bs4.BeautifulSoup') -> Attachment:
         # Parse viewport dimensions
         try:
             width, height = map(int, viewport_str.split('x'))
-        except:
+        except (ValueError, AttributeError):
             width, height = 1280, 720  # Default fallback
         
         async def capture_screenshot(url: str) -> str:
@@ -1274,7 +1274,7 @@ def images(att: Attachment, eps_doc: 'EPSDocument') -> Attachment:
                         os.unlink(eps_temp_path)
                         if os.path.exists(png_temp_path):
                             os.unlink(png_temp_path)
-                    except:
+                    except (OSError, IOError):
                         pass  # Ignore cleanup errors
                         
             except (ImportError, FileNotFoundError, subprocess.TimeoutExpired, subprocess.CalledProcessError):

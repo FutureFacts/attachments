@@ -11,7 +11,7 @@ def text(att: Attachment, df: 'pandas.DataFrame') -> Attachment:
         att.text += "=" * len(f"Data from {att.path}") + "\n\n"
         att.text += df.to_string(index=False)
         att.text += f"\n\nShape: {df.shape}\n\n"
-    except:
+    except (AttributeError, TypeError, Exception):
         att.text += f"Data from {att.path}\n*Could not convert to text*\n\n"
     return att
 
@@ -90,7 +90,7 @@ def text(att: Attachment, pdf: 'pdfplumber.PDF') -> Attachment:
                     'text_extraction_quality': 'good'
                 })
                 
-    except:
+    except Exception:
         att.text += "*Error extracting PDF text*\n\n"
     
     return att

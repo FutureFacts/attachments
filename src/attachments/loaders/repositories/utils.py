@@ -536,7 +536,7 @@ def get_repo_metadata(repo_path: str) -> Dict[str, Any]:
         if repo.remotes:
             try:
                 metadata['remote_url'] = repo.remotes.origin.url
-            except:
+            except (AttributeError, IndexError):
                 pass
 
     except ImportError:

@@ -326,10 +326,10 @@ def tile_images(input_obj: Union[Attachment, 'AttachmentCollection']) -> Attachm
                         try:
                             font_size = max(20, min_height // 25)  # Much larger: increased minimum to 20, better ratio
                             font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
-                        except:
+                        except (IOError, OSError, Exception):
                             try:
                                 font = ImageFont.load_default()
-                            except:
+                            except Exception:
                                 font = None
                         
                         if font:
@@ -537,7 +537,7 @@ def add_repo_headers(att: Attachment) -> Attachment:
         try:
             file_size = os.path.getsize(att.path)
             size_str = _format_file_size(file_size)
-        except:
+        except OSError:
             size_str = "unknown"
         
         # Create header
