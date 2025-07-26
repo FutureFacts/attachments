@@ -104,15 +104,20 @@ def _create_dspy_class():
     
     import pydantic
     
-    # Try to import the new BaseType from DSPy 2.6.25+
-    try:
-        from dspy.adapters.types import BaseType
-        use_new_basetype = True
-    except ImportError:
-        # Fallback for older DSPy versions
-        use_new_basetype = False
+    import dspy
+
+    if hasattr(dspy, 'Type'):
+        # For upcoming DSPy version 3.0+ where BaseType is renamed to Type
+        # https://github.com/stanfordnlp/dspy/pull/8510
+        BaseType = dspy.Type
+    elif hasattr(dspy, 'BaseType'):
+        # For DSPy 2.6.25+ with new BaseType
+        BaseType = dspy.BaseType
+    else:
+        # Pre-2.6.25 DSPy versions
+        BaseType = None
     
-    if use_new_basetype:
+    if BaseType is not None:
         # DSPy 2.6.25+ with new BaseType
         class DSPyAttachment(BaseType):
             """DSPy-compatible wrapper for Attachment objects following new BaseType pattern."""
