@@ -10,7 +10,7 @@ def markdown(att: Attachment, df: 'pandas.DataFrame') -> Attachment:
         att.text += f"## Data from {att.path}\n\n"
         att.text += df.to_markdown(index=False)
         att.text += f"\n\n*Shape: {df.shape}*\n\n"
-    except:
+    except (AttributeError, TypeError, Exception):
         att.text += f"## Data from {att.path}\n\n*Could not convert to markdown*\n\n"
     return att
 
@@ -125,7 +125,7 @@ def markdown(att: Attachment, img: 'PIL.Image.Image') -> Attachment:
         att.text += f"- **Size**: {getattr(img, 'size', 'Unknown')}\n"
         att.text += f"- **Mode**: {getattr(img, 'mode', 'Unknown')}\n\n"
         att.text += "*Image converted to base64 and available in images list*\n\n"
-    except:
+    except (AttributeError, Exception):
         att.text += "*Image metadata not available*\n\n"
     return att
 
@@ -146,7 +146,7 @@ def markdown(att: Attachment, doc: 'docx.Document') -> Attachment:
                         level = int(paragraph.style.name.split()[-1])
                         heading_prefix = "#" * min(level + 1, 6)  # Limit to h6
                         att.text += f"{heading_prefix} {paragraph.text}\n\n"
-                    except:
+                    except (ValueError, AttributeError, IndexError):
                         # If we can't parse the heading level, treat as h2
                         att.text += f"## {paragraph.text}\n\n"
                 else:

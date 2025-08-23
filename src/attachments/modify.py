@@ -32,7 +32,7 @@ def pages(att: Attachment, pdf: 'pdfplumber.PDF') -> Attachment:
             try:
                 total_pages = len(pdf.pages)
                 selected_pages.append(total_pages)
-            except:
+            except (AttributeError, IndexError, TypeError):
                 selected_pages.append(1)
         else:
             selected_pages.append(int(part))
@@ -58,7 +58,7 @@ def pages(att: Attachment, pres: 'pptx.Presentation') -> Attachment:
         elif part == '-1':
             try:
                 selected_slides.append(len(pres.slides) - 1)
-            except:
+            except (AttributeError, IndexError, TypeError):
                 selected_slides.append(0)
         else:
             selected_slides.append(int(part) - 1)
@@ -74,7 +74,7 @@ def limit(att: Attachment, df: 'pandas.DataFrame') -> Attachment:
         try:
             limit_val = int(att.commands['limit'])
             att._obj = df.head(limit_val)
-        except:
+        except (ValueError, TypeError):
             pass
     return att
 
@@ -86,7 +86,7 @@ def select(att: Attachment, df: 'pandas.DataFrame') -> Attachment:
         try:
             columns = [c.strip() for c in att.commands['select'].split(',')]
             att._obj = df[columns]
-        except:
+        except (KeyError, AttributeError, TypeError):
             pass
     return att
 
@@ -270,10 +270,10 @@ def watermark(att: Attachment, img: 'PIL.Image.Image') -> Attachment:
         # Try to load font
         try:
             font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
-        except:
+        except (IOError, OSError, Exception):
             try:
                 font = ImageFont.load_default()
-            except:
+            except Exception:
                 # If no font available, skip watermarking
                 return att
         

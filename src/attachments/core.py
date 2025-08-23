@@ -71,7 +71,7 @@ class Pipeline:
             for fallback in self.fallback_pipelines:
                 try:
                     return fallback(input_)
-                except:
+                except Exception:
                     continue
             # If all pipelines fail, raise the original exception
             raise e
@@ -424,7 +424,7 @@ class Attachment:
         # Convert content to string for mixed pattern searching
         try:
             content_str = content_sample.decode('latin-1', errors='ignore')
-        except:
+        except (UnicodeDecodeError, AttributeError):
             content_str = ''
         
         for pattern in patterns:
@@ -972,7 +972,7 @@ def _detect_presenter_category(func: Callable, presenter_name: str) -> str:
             return 'image'
         elif text_indicators > 0:
             return 'text'
-    except:
+    except (OSError, IOError, Exception):
         # If source analysis fails, fall back to safe default
         pass
     

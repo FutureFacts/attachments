@@ -12,7 +12,7 @@ def summary(att: Attachment) -> Attachment:
         if hasattr(att._obj, '__len__'):
             try:
                 summary_text += f"- **Length**: {len(att._obj)}\n"
-            except:
+            except (TypeError, AttributeError):
                 pass
         summary_text += f"- **String representation**: {str(att._obj)[:100]}...\n"
         att.text += summary_text + "\n"
@@ -33,14 +33,14 @@ def summary(att: Attachment, df: 'pandas.DataFrame') -> Attachment:
         try:
             memory_usage = df.memory_usage(deep=True).sum()
             summary_text += f"- **Memory Usage**: {memory_usage} bytes\n"
-        except:
+        except (AttributeError, TypeError):
             summary_text += f"- **Memory Usage**: Not available\n"
         
         # Get numeric columns (from legacy implementation)
         try:
             numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
             summary_text += f"- **Numeric Columns**: {numeric_cols}\n"
-        except:
+        except (AttributeError, TypeError):
             summary_text += f"- **Numeric Columns**: Not available\n"
         
         att.text += summary_text + "\n"
@@ -57,7 +57,7 @@ def head(att: Attachment) -> Attachment:
         try:
             head_result = att._obj.head()
             att.text += f"\n## Preview\n\n{str(head_result)}\n\n"
-        except:
+        except AttributeError:
             att.text += f"\n## Preview\n\n{str(att._obj)[:200]}\n\n"
     else:
         att.text += f"\n## Preview\n\n{str(att._obj)[:200]}\n\n"
