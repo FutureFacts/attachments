@@ -46,6 +46,7 @@ htmlcov/
 .cache
 osetests.xml
 .pytest_cache/
+.ruff_cache/
 
 # Translations
 *.mo
