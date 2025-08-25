@@ -11,7 +11,6 @@ def text_to_string(att: Attachment) -> Attachment:
     content = att.text_content
     
     att._obj = content
-    att.text = content
     return att
 
 
