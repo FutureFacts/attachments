@@ -136,7 +136,7 @@ print(msg.content)
 We have a special `dspy` module that allows you to use Attachments with DSPy.
 
 ```bash
-pip install dspy-ai
+pip install dspy
 ```
 
 ```python
