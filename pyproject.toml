@@ -54,8 +54,8 @@ dependencies = [
 [project.urls]
 "Homepage" = "https://maximerivest.github.io/attachments/"
 "Documentation" = "https://maximerivest.github.io/attachments/"
-"Repository" = "https://github.com/maximrivest/attachments"
-"Bug Tracker" = "https://github.com/maximrivest/attachments/issues"
+"Repository" = "https://github.com/maximerivest/attachments"
+"Bug Tracker" = "https://github.com/maximerivest/attachments/issues"
 "Changelog" = "https://maximerivest.github.io/attachments/changelog.html"
 
 [project.scripts]
