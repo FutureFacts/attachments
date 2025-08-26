@@ -6,37 +6,39 @@ This script processes Python files in docs/scripts/ and creates corresponding
 .ipynb files in docs/examples/ with proper notebook metadata and MyST compatibility.
 """
 
+import json
 import subprocess
 import sys
-import json
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any
+
 
 def install_jupytext():
     """Ensure jupytext is installed."""
     try:
-        subprocess.run([sys.executable, "-m", "jupytext", "--version"], 
-                      capture_output=True, check=True)
+        subprocess.run(
+            [sys.executable, "-m", "jupytext", "--version"], capture_output=True, check=True
+        )
         print("✅ jupytext is available")
         return True
     except subprocess.CalledProcessError:
         print("❌ jupytext not found. Installing...")
         try:
-            subprocess.run([sys.executable, "-m", "pip", "install", "jupytext"], 
-                          check=True)
+            subprocess.run([sys.executable, "-m", "pip", "install", "jupytext"], check=True)
             print("✅ jupytext installed successfully")
             return True
         except subprocess.CalledProcessError as e:
             print(f"❌ Failed to install jupytext: {e}")
             return False
 
-def create_notebook_metadata(title: str, description: str = "") -> Dict[str, Any]:
+
+def create_notebook_metadata(title: str, description: str = "") -> dict[str, Any]:
     """Create notebook metadata for MyST and Jupyter."""
     return {
         "kernelspec": {
             "display_name": "Python 3 (ipykernel)",
             "language": "python",
-            "name": "python3"
+            "name": "python3",
         },
         "language_info": {
             "codemirror_mode": {"name": "ipython", "version": 3},
@@ -45,7 +47,7 @@ def create_notebook_metadata(title: str, description: str = "") -> Dict[str, Any
             "name": "python",
             "nbconvert_exporter": "python",
             "pygments_lexer": "ipython3",
-            "version": "3.11.0"
+            "version": "3.11.0",
         },
         "jupytext": {
             "formats": "ipynb,py:percent",
@@ -53,72 +55,78 @@ def create_notebook_metadata(title: str, description: str = "") -> Dict[str, Any
                 "extension": ".py",
                 "format_name": "percent",
                 "format_version": "1.3",
-                "jupytext_version": "1.16.0"
-            }
-        }
+                "jupytext_version": "1.16.0",
+            },
+        },
     }
+
 
 def convert_py_to_notebook(py_file: Path, output_dir: Path) -> Path:
     """Convert Python file to notebook using jupytext."""
-    
+
     notebook_name = py_file.stem + ".ipynb"
     notebook_path = output_dir / notebook_name
-    
+
     print(f"🔄 Converting {py_file.name} → {notebook_name}")
-    
+
     # Read the Python file
-    content = py_file.read_text(encoding='utf-8')
-    
+    content = py_file.read_text(encoding="utf-8")
+
     # Add jupytext header if not present
     if not content.startswith("# ---") and not content.startswith("# %%"):
-        title = py_file.stem.replace('_', ' ').title()
-        if 'tutorial' in py_file.name.lower():
+        title = py_file.stem.replace("_", " ").title()
+        if "tutorial" in py_file.name.lower():
             title += " Tutorial"
-        elif 'demo' in py_file.name.lower():
+        elif "demo" in py_file.name.lower():
             title += " Demo"
-            
+
         # Add percent format header
-        header = f'''# %% [markdown]
+        header = f"""# %% [markdown]
 # # {title}
 #
 # This notebook demonstrates the Attachments library's capabilities with our new modular architecture.
 
 # %%
-'''
+"""
         content = header + content
-    
+
     # Write to temp file with percent format
     temp_py_path = output_dir / (py_file.stem + "_temp.py")
-    temp_py_path.write_text(content, encoding='utf-8')
-    
+    temp_py_path.write_text(content, encoding="utf-8")
+
     try:
         # Convert using jupytext
         cmd = [
-            sys.executable, "-m", "jupytext",
-            "--to", "ipynb",
-            "--output", str(notebook_path),
-            str(temp_py_path)
+            sys.executable,
+            "-m",
+            "jupytext",
+            "--to",
+            "ipynb",
+            "--output",
+            str(notebook_path),
+            str(temp_py_path),
         ]
-        
+
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         print(f"✅ Successfully converted {py_file.name}")
-        
+
         # Clean up temp file
         temp_py_path.unlink()
-        
+
         return notebook_path
-        
+
     except subprocess.CalledProcessError as e:
         print(f"❌ Error converting {py_file.name}: {e.stderr}")
         if temp_py_path.exists():
             temp_py_path.unlink()
         raise
 
+
 def create_demo_notebook(output_dir: Path) -> Path:
     """Create a comprehensive demo notebook showcasing the modular architecture."""
-    
+
     notebook_path = output_dir / "modular_architecture_demo.ipynb"
-    
+
     notebook_content = {
         "cells": [
             {
@@ -140,8 +148,8 @@ def create_demo_notebook(output_dir: Path) -> Path:
                     "## 📜 MIT License Compatibility\n",
                     "\n",
                     "- ✅ **Default**: `pypdf` (BSD) + `pypdfium2` (BSD/Apache)\n",
-                    "- ⚠️ **Optional**: `PyMuPDF/fitz` (AGPL) - explicit opt-in only\n"
-                ]
+                    "- ⚠️ **Optional**: `PyMuPDF/fitz` (AGPL) - explicit opt-in only\n",
+                ],
             },
             {
                 "cell_type": "code",
@@ -152,10 +160,10 @@ def create_demo_notebook(output_dir: Path) -> Path:
                     "from attachments.core import load, modify, present, adapt\n",
                     "from attachments import Attachments\n",
                     "\n",
-                    "print(\"🔧 Attachments Modular Architecture Demo\")\n",
-                    "print(\"=\" * 50)\n",
-                    "print(\"🏗️  MIT-Compatible PDF Processing\")"
-                ]
+                    'print("🔧 Attachments Modular Architecture Demo")\n',
+                    'print("=" * 50)\n',
+                    'print("🏗️  MIT-Compatible PDF Processing")',
+                ],
             },
             {
                 "cell_type": "markdown",
@@ -163,20 +171,20 @@ def create_demo_notebook(output_dir: Path) -> Path:
                 "source": [
                     "## 📋 Available Components\n",
                     "\n",
-                    "Let's see what components are auto-registered:"
-                ]
+                    "Let's see what components are auto-registered:",
+                ],
             },
             {
                 "cell_type": "code",
                 "execution_count": None,
                 "metadata": {},
                 "source": [
-                    "print(\"📋 Available Components:\")\n",
+                    'print("📋 Available Components:")\n',
                     "print(f\"   Loaders: {[attr for attr in dir(load) if not attr.startswith('_')]}\")\n",
                     "print(f\"   Modifiers: {[attr for attr in dir(modify) if not attr.startswith('_')]}\")\n",
                     "print(f\"   Presenters: {[attr for attr in dir(present) if not attr.startswith('_')]}\")\n",
-                    "print(f\"   Adapters: {[attr for attr in dir(adapt) if not attr.startswith('_')]}\")"
-                ]
+                    "print(f\"   Adapters: {[attr for attr in dir(adapt) if not attr.startswith('_')]}\")",
+                ],
             },
             {
                 "cell_type": "markdown",
@@ -184,8 +192,8 @@ def create_demo_notebook(output_dir: Path) -> Path:
                 "source": [
                     "## 🚀 High-Level Interface\n",
                     "\n",
-                    "The easiest way to use Attachments is through the high-level interface:"
-                ]
+                    "The easiest way to use Attachments is through the high-level interface:",
+                ],
             },
             {
                 "cell_type": "code",
@@ -195,18 +203,18 @@ def create_demo_notebook(output_dir: Path) -> Path:
                     "# Use the high-level interface\n",
                     "# Note: Replace with an actual file path for real usage\n",
                     "try:\n",
-                    "    ctx = Attachments(\"README.md\")  # Using README as example\n",
-                    "    print(f\"✅ Files loaded: {len(ctx)}\")\n",
-                    "    print(f\"✅ Total text length: {len(ctx.text)} characters\")\n",
-                    "    print(f\"✅ Total images: {len(ctx.images)}\")\n",
+                    '    ctx = Attachments("README.md")  # Using README as example\n',
+                    '    print(f"✅ Files loaded: {len(ctx)}")\n',
+                    '    print(f"✅ Total text length: {len(ctx.text)} characters")\n',
+                    '    print(f"✅ Total images: {len(ctx.images)}")\n',
                     "    \n",
                     "    # Show string representation\n",
-                    "    print(\"\\n📄 Summary:\")\n",
+                    '    print("\\n📄 Summary:")\n',
                     "    print(ctx)\n",
                     "except Exception as e:\n",
-                    "    print(f\"📝 Note: {e}\")\n",
-                    "    print(\"This is expected if README.md is not available in the current path\")"
-                ]
+                    '    print(f"📝 Note: {e}")\n',
+                    '    print("This is expected if README.md is not available in the current path")',
+                ],
             },
             {
                 "cell_type": "markdown",
@@ -214,8 +222,8 @@ def create_demo_notebook(output_dir: Path) -> Path:
                 "source": [
                     "## 🎯 Type-Safe Dispatch\n",
                     "\n",
-                    "The modular architecture uses Python's type system for safe dispatch:"
-                ]
+                    "The modular architecture uses Python's type system for safe dispatch:",
+                ],
             },
             {
                 "cell_type": "code",
@@ -225,10 +233,10 @@ def create_demo_notebook(output_dir: Path) -> Path:
                     "import pandas as pd\n",
                     "import numpy as np\n",
                     "\n",
-                    "print(\"🎯 Type-Safe Dispatch Demo:\")\n",
+                    'print("🎯 Type-Safe Dispatch Demo:")\n',
                     "\n",
                     "# Create test data\n",
-                    "df = pd.DataFrame({\"Feature\": [\"PDF Loading\", \"Image Generation\"], \"Status\": [\"✅ MIT License\", \"✅ BSD License\"]})\n",
+                    'df = pd.DataFrame({"Feature": ["PDF Loading", "Image Generation"], "Status": ["✅ MIT License", "✅ BSD License"]})\n',
                     "arr = np.array([1, 2, 3, 4, 5])\n",
                     "\n",
                     "# Multiple dispatch works automatically based on types\n",
@@ -236,23 +244,19 @@ def create_demo_notebook(output_dir: Path) -> Path:
                     "df_markdown = present.markdown(df)\n",
                     "arr_markdown = present.markdown(arr)\n",
                     "\n",
-                    "print(f\"   📊 DataFrame text: {len(df_text)} chars\")\n",
+                    'print(f"   📊 DataFrame text: {len(df_text)} chars")\n',
                     "print(f\"   📊 DataFrame markdown has tables: {'|' in df_markdown}\")\n",
                     "print(f\"   🔢 Array markdown has code blocks: {'```' in arr_markdown}\")\n",
                     "\n",
                     "# Show the actual markdown output\n",
-                    "print(\"\\n📋 DataFrame as Markdown:\")\n",
-                    "print(df_markdown[:200] + \"...\" if len(df_markdown) > 200 else df_markdown)"
-                ]
+                    'print("\\n📋 DataFrame as Markdown:")\n',
+                    'print(df_markdown[:200] + "..." if len(df_markdown) > 200 else df_markdown)',
+                ],
             },
             {
                 "cell_type": "markdown",
                 "metadata": {},
-                "source": [
-                    "## 🔌 API Integration\n",
-                    "\n",
-                    "Easy integration with AI APIs:"
-                ]
+                "source": ["## 🔌 API Integration\n", "\n", "Easy integration with AI APIs:"],
             },
             {
                 "cell_type": "code",
@@ -260,37 +264,37 @@ def create_demo_notebook(output_dir: Path) -> Path:
                 "metadata": {},
                 "source": [
                     "# Demo API formatting (without actual files)\n",
-                    "print(\"🔌 API Integration Demo:\")\n",
+                    'print("🔌 API Integration Demo:")\n',
                     "\n",
                     "# Create a simple attachment for demo\n",
                     "import tempfile\n",
                     "with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:\n",
-                    "    f.write(\"This is a demo text file for API integration.\")\n",
+                    '    f.write("This is a demo text file for API integration.")\n',
                     "    temp_file = f.name\n",
                     "\n",
                     "try:\n",
                     "    ctx = Attachments(temp_file)\n",
                     "    \n",
                     "    # Format for OpenAI\n",
-                    "    openai_msgs = ctx.to_openai(\"Analyze this content\")\n",
-                    "    print(f\"📤 OpenAI format: {len(openai_msgs)} messages\")\n",
+                    '    openai_msgs = ctx.to_openai("Analyze this content")\n',
+                    '    print(f"📤 OpenAI format: {len(openai_msgs)} messages")\n',
                     "    \n",
                     "    # Format for Claude\n",
-                    "    claude_msgs = ctx.to_claude(\"Analyze this content\")\n",
-                    "    print(f\"📤 Claude format: {len(claude_msgs)} messages\")\n",
+                    '    claude_msgs = ctx.to_claude("Analyze this content")\n',
+                    '    print(f"📤 Claude format: {len(claude_msgs)} messages")\n',
                     "    \n",
-                    "    print(\"✅ API formatting successful!\")\n",
+                    '    print("✅ API formatting successful!")\n',
                     "    \n",
                     "except Exception as e:\n",
-                    "    print(f\"⚠️  API demo: {e}\")\n",
+                    '    print(f"⚠️  API demo: {e}")\n',
                     "finally:\n",
                     "    # Clean up\n",
                     "    import os\n",
                     "    try:\n",
                     "        os.unlink(temp_file)\n",
                     "    except:\n",
-                    "        pass"
-                ]
+                    "        pass",
+                ],
             },
             {
                 "cell_type": "markdown",
@@ -324,86 +328,88 @@ def create_demo_notebook(output_dir: Path) -> Path:
                     "\n",
                     "🔮 **Ready for new loaders, presenters, modifiers & adapters!**\n",
                     "\n",
-                    "The architecture is designed to make adding new file formats and output targets as simple as writing a single decorated function."
-                ]
-            }
+                    "The architecture is designed to make adding new file formats and output targets as simple as writing a single decorated function.",
+                ],
+            },
         ],
         "metadata": create_notebook_metadata(
             "Modular Architecture Demo",
-            "Comprehensive demo of the new MIT-compatible modular architecture"
+            "Comprehensive demo of the new MIT-compatible modular architecture",
         ),
         "nbformat": 4,
-        "nbformat_minor": 4
+        "nbformat_minor": 4,
     }
-    
+
     # Write the notebook
-    with open(notebook_path, 'w', encoding='utf-8') as f:
+    with open(notebook_path, "w", encoding="utf-8") as f:
         json.dump(notebook_content, f, indent=2, ensure_ascii=False)
-    
+
     print(f"📓 Created demo notebook: {notebook_path.name}")
     return notebook_path
 
+
 def main():
     """Main conversion function."""
-    
+
     print("🔧 Jupyter Notebook Conversion Pipeline")
     print("=" * 50)
-    
+
     # Ensure jupytext is available
     if not install_jupytext():
         return 1
-    
+
     # Paths
     project_root = Path(__file__).parent.parent
     scripts_dir = project_root / "docs" / "scripts"
     examples_dir = project_root / "docs" / "examples"
-    
+
     # Ensure output directory exists
     examples_dir.mkdir(parents=True, exist_ok=True)
     print(f"📁 Output directory: {examples_dir}")
-    
+
     # Create the demo notebook first
     demo_path = create_demo_notebook(examples_dir)
-    
+
     # Scripts to convert
     scripts_to_convert = [
         "openai_attachments_tutorial.py",
-        "architecture_demonstration.py", 
+        "architecture_demonstration.py",
         "atttachment_pipelines.py",
-        "how_to_develop_plugins.py"
+        "how_to_develop_plugins.py",
     ]
-    
+
     converted_count = 0
-    
+
     print(f"\n🔍 Looking for scripts in: {scripts_dir}")
-    
+
     for script_name in scripts_to_convert:
         script_path = scripts_dir / script_name
-        
+
         if not script_path.exists():
             print(f"⚠️  Script not found: {script_name}")
             continue
-            
+
         try:
             notebook_path = convert_py_to_notebook(script_path, examples_dir)
             converted_count += 1
-            
+
         except Exception as e:
             print(f"❌ Failed to convert {script_name}: {e}")
-    
-    print(f"\n🎉 Conversion Summary:")
-    print(f"   📓 Demo notebook: ✅ Created")
+
+    print("\n🎉 Conversion Summary:")
+    print("   📓 Demo notebook: ✅ Created")
     print(f"   📄 Scripts converted: {converted_count}")
     print(f"   📁 Notebooks saved to: {examples_dir}")
-    
+
     # List created notebooks
     notebooks = list(examples_dir.glob("*.ipynb"))
     if notebooks:
-        print(f"\n📚 Created Notebooks:")
+        print("\n📚 Created Notebooks:")
         for nb in notebooks:
             print(f"   📓 {nb.name}")
-    
+
     return 0
 
+
 if __name__ == "__main__":
-    sys.exit(main()) 
+    sys.exit(main())

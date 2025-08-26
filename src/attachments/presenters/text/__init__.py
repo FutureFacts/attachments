@@ -1,18 +1,18 @@
 """Text presenters - markdown, plain text, CSV, XML output formats."""
 
 from .markdown import *
+from .ocr import *
 from .plain import *
 from .structured import *
-from .ocr import *
 
 __all__ = [
     # Markdown presenters
-    'markdown',
-    # Plain text presenters  
-    'text',
+    "markdown",
+    # Plain text presenters
+    "text",
     # Structured text presenters
-    'csv',
-    'xml',
+    "csv",
+    "xml",
     # OCR presenters
-    'ocr'
+    "ocr",
 ]

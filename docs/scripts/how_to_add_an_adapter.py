@@ -1,16 +1,16 @@
 # %% [markdown]
 # # How to add an adapter
-# 
+#
 # ## What is an adapter?
 # Adapters are functions organized in the `attachments.adapt` namespace.
-# 
+#
 # The `@adapter` decorator is used to mark a function as an adapter and register it in the `attachments.adapt` namespace.
 # This will also make it automatically available in `Attachments("path/to/file").name_of_the_adapter()`.
 # You can pass additional parameters to the adapter function, but the first parameter is required to be the `input_obj`.
 #
 # ### Example of an adapter
 # If we want to add an adapter called `mysupersdk` that allows us to use Attachments with mysupersdk, we can do the following:
-# 
+#
 # ```python
 # @adapter
 # def mysupersdk(input_obj: Union[Attachment, AttachmentCollection], prompt: str = "") -> List[Dict[str, Any]]:
@@ -24,21 +24,21 @@
 # an adapter that allows us to use Attachments with agno. For agno, we may want to name the adapter `agno`.
 #
 # Like this:
-# 
+#
 # ```python
 # @adapter
 # def agno(input_obj: Union[Attachment, AttachmentCollection], prompt: str = ""):
 #     ...
 # ```
 # We are not quite sure yet what the output will be, but we will find out later.
-# 
+#
 # ## How agno usually works
-# 
-# This is from agno's documentation: https://docs.agno.com/agents/multimodal. 
-# 
+#
+# This is from agno's documentation: https://docs.agno.com/agents/multimodal.
+#
 # In agno, you create an Agent object, and then when calling the agent you can
 # pass it an image using the Image object defined in the agno.media module.
-# For audio, you can use the Audio object defined in the agno.media module, and for 
+# For audio, you can use the Audio object defined in the agno.media module, and for
 # video, you can use the Video object defined in the agno.media module. Video is supported
 # by the Gemini models, and audio can be given to a few models including Gemini and OpenAI's
 # gpt-4o-audio-preview.
@@ -49,7 +49,7 @@
 #
 # In this example, we have a simple agent that would look at the provided image and
 # search online for the latest news about it.
-#%%
+# %%
 from agno.agent import Agent as agnoAgent
 from agno.media import Image as agnoImage
 from agno.models.openai import OpenAIChat
@@ -68,7 +68,7 @@ response = agent.run(
             url="https://upload.wikimedia.org/wikipedia/commons/0/0c/GoldenGateBridge-001.jpg"
         )
     ],
-    stream=False  # No streaming
+    stream=False,  # No streaming
 )
 response.content
 
@@ -77,7 +77,7 @@ response.content
 #
 # The goal is to create an adapter that allows us to use Attachments with agno.
 # We would like it to work like this:
-# 
+#
 # ```python
 # response = agent.run(
 #     **Attachments("https://upload.wikimedia.org/wikipedia/commons/0/0c/GoldenGateBridge-001.jpg").
@@ -93,8 +93,8 @@ response.content
 #
 # %% [markdown]
 # ## Exploring agno's Image Object for Attachment Adapter Development
-# 
-# Now that we understand how agno works, let's explore the Image object 
+#
+# Now that we understand how agno works, let's explore the Image object
 # to understand how to build our attachment adapter.
 #
 # ### Examining the Image Object Structure
@@ -137,16 +137,19 @@ print("ID:", img.id)
 
 # %% [markdown]
 # ## Experimenting with agno Image Creation
-# 
+#
 # Let's try creating agno Images with different input methods to understand what works:
 
 # %%
-from agno.media import Image as AgnoImage
 import base64
+
+from agno.media import Image as AgnoImage
 
 # Method 1: Create with URL
 print("=== Method 1: URL ===")
-img_url = AgnoImage(url="https://upload.wikimedia.org/wikipedia/commons/0/0c/GoldenGateBridge-001.jpg")
+img_url = AgnoImage(
+    url="https://upload.wikimedia.org/wikipedia/commons/0/0c/GoldenGateBridge-001.jpg"
+)
 print("URL Image:", img_url)
 print("Has URL:", bool(img_url.url))
 
@@ -168,7 +171,10 @@ print("\n=== Method 3: Data URL ===")
 data_url = f"data:image/png;base64,{sample_base64}"
 img_data_url = AgnoImage(url=data_url)
 print("Data URL Image:", img_data_url)
-print("URL field contains:", img_data_url.url[:50] + "..." if len(img_data_url.url) > 50 else img_data_url.url)
+print(
+    "URL field contains:",
+    img_data_url.url[:50] + "..." if len(img_data_url.url) > 50 else img_data_url.url,
+)
 
 # %% [markdown]
 # Excellent! Now we understand that agno Images can handle:
@@ -180,7 +186,7 @@ print("URL field contains:", img_data_url.url[:50] + "..." if len(img_data_url.u
 
 # %% [markdown]
 # ## Understanding Attachments Image Format
-# 
+#
 # Now let's look at how Attachments stores images and see what we need to convert:
 
 # %%
@@ -188,8 +194,10 @@ from attachments import Attachments
 
 # %% [markdown]
 # Create an attachment with an image:
-#%%
-sample_attachments = Attachments("https://upload.wikimedia.org/wikipedia/commons/0/0c/GoldenGateBridge-001.jpg")
+# %%
+sample_attachments = Attachments(
+    "https://upload.wikimedia.org/wikipedia/commons/0/0c/GoldenGateBridge-001.jpg"
+)
 # %% [markdown]
 # Get the underlying Attachment object (this is what adapters work with):
 # %%
@@ -200,12 +208,20 @@ sample_attachment
 # %%
 # Let's examine what the attachment contains
 print("Text content length:", len(sample_attachment.text))
-# %% 
+# %%
 print("Number of images:", len(sample_attachment.images))
-#%%
-print("Text preview:", sample_attachment.text[:200] + "..." if len(sample_attachment.text) > 200 else sample_attachment.text)
+# %%
+print(
+    "Text preview:",
+    (
+        sample_attachment.text[:200] + "..."
+        if len(sample_attachment.text) > 200
+        else sample_attachment.text
+    ),
+)
 # %%
 from IPython.display import HTML
+
 HTML(f"<img src='{sample_attachment.images[0]}'>")
 
 # %% [markdown]
@@ -215,7 +231,7 @@ if sample_attachment.images:
     img_data = sample_attachment.images[0]
     print("Image data type:", type(img_data))
     print("Image data length:", len(img_data))
-    print("Starts with 'data:image/':", img_data.startswith('data:image/'))
+    print("Starts with 'data:image/':", img_data.startswith("data:image/"))
     print("First 50 characters:", img_data[:50])
 
 # %% [markdown]
@@ -224,12 +240,12 @@ if sample_attachment.images:
 # - These are base64-encoded images with proper MIME type prefixes
 # - This format is **directly compatible** with agno's Image URL field!
 #
-# **Important Note**: This tutorial works with the underlying `Attachment` objects (lowercase 'a'), 
+# **Important Note**: This tutorial works with the underlying `Attachment` objects (lowercase 'a'),
 # not the high-level `Attachments` class. Adapters receive `Attachment` objects as input.
 
 # %% [markdown]
 # ## Testing the Conversion
-# 
+#
 # Let's test if we can directly use Attachments image data with agno:
 
 # %%
@@ -250,12 +266,14 @@ print("Image URL field (first 100 chars):", agno_img.url[:100] + "...")
 # The object instantiated by Attachments will always have `.images` and `.text` attributes.
 # In the case of multiple attachments, these will be pre-concatenated.
 #
-# So we can use the same API for both single and multiple attachments. 
+# So we can use the same API for both single and multiple attachments.
 #
 # Here is a quick example of that:
 # %%
-att = Attachments("https://upload.wikimedia.org/wikipedia/commons/0/0c/GoldenGateBridge-001.jpg",
-                  "https://upload.wikimedia.org/wikipedia/commons/2/2c/Llama_willu.jpg")
+att = Attachments(
+    "https://upload.wikimedia.org/wikipedia/commons/0/0c/GoldenGateBridge-001.jpg",
+    "https://upload.wikimedia.org/wikipedia/commons/2/2c/Llama_willu.jpg",
+)
 att
 # %%
 len(att.images)
@@ -263,6 +281,7 @@ len(att.images)
 print(att.text)
 # %%
 from IPython.display import HTML
+
 HTML(f"<img src='{att.images[0]}' height='200'><img src='{att.images[1]}' height='200'>")
 # %% [markdown]
 # And so we can easily create a list of Agno Images:
@@ -272,7 +291,7 @@ HTML(f"<img src='{att.images[0]}' height='200'><img src='{att.images[1]}' height
 # Next, we need to understand what agno's `agent.run()` method expects. We will study that in the next section.
 #
 # ## Understanding agno's Agent.run() Method
-# 
+#
 # Let's examine how agno agents expect to receive images and text. For this,
 # we will look at the `agent.run` signature and understand what it expects.
 #
@@ -288,15 +307,18 @@ agent = AgnoAgent(
 
 # Let's see what parameters agent.run accepts
 import inspect
+
 sig = inspect.signature(agent.run)
 print("agent.run() parameters:")
 for param_name, param in sig.parameters.items():
-    print(f"  {param_name}: {param.annotation if param.annotation != inspect.Parameter.empty else 'Any'}")
+    print(
+        f"  {param_name}: {param.annotation if param.annotation != inspect.Parameter.empty else 'Any'}"
+    )
 
 # %% [markdown]
 # From the agno documentation and our exploration, `agent.run()` accepts:
 # - **message** (str): The text prompt/question
-# - **images** (List[Image]): List of agno Image objects  
+# - **images** (List[Image]): List of agno Image objects
 # - **audio** (List[Audio]): List of agno Audio objects
 # - **stream** (bool): Whether to stream the response
 # - And other parameters...
@@ -307,12 +329,14 @@ agent = AgnoAgent(
     model=OpenAIChat(id="gpt-4.1-nano"),
     markdown=True,
 )
-att = Attachments("https://upload.wikimedia.org/wikipedia/commons/0/0c/GoldenGateBridge-001.jpg",
-                  "https://upload.wikimedia.org/wikipedia/commons/2/2c/Llama_willu.jpg")
+att = Attachments(
+    "https://upload.wikimedia.org/wikipedia/commons/0/0c/GoldenGateBridge-001.jpg",
+    "https://upload.wikimedia.org/wikipedia/commons/2/2c/Llama_willu.jpg",
+)
 res = agent.run(
     message="What do you see in this image?",
     images=[AgnoImage(url=img) for img in att.images],
-    stream=False
+    stream=False,
 )
 res.content
 # %% [markdown]
@@ -325,7 +349,7 @@ res.content
 res = agent.run(
     message=f"Name the 2 things in the 2 images and tell me about the image metadata: {att.text}",
     images=[AgnoImage(url=img) for img in att.images],
-    stream=False
+    stream=False,
 )
 res.content
 
@@ -335,11 +359,11 @@ res.content
 #
 # By creating a dictionary with the keys 'message' and 'images', we can pass it to the `agent.run()`
 # method using the `**` operator.
-# 
+#
 # Like this:
 #
 # %%
-prompt = f"Name the 2 things in the 2 images and tell me about the image metadata:"
+prompt = "Name the 2 things in the 2 images and tell me about the image metadata:"
 images = [AgnoImage(url=img) for img in att.images]
 
 params = {
@@ -348,6 +372,7 @@ params = {
 }
 res = res = agent.run(**params)
 res.content
+
 
 # %% [markdown]
 # We could easily turn that into a function:
@@ -360,20 +385,27 @@ def convert_attachments_to_agno(attachment, prompt=""):
         "images": images,
     }
 
+
 params = convert_attachments_to_agno(att, "What do you see in this image?")
 res = agent.run(**params)
 res.content
 # %% [markdown]
 # Great! Now all we have to do is mark it as an adapter:
 # %%
+from typing import Any
+
 from attachments.adapt import adapter
-from typing import Union, Dict, Any
+
+
 @adapter
-def custom_agno(input_obj: Union[Attachment, AttachmentCollection], prompt: str = "") -> Dict[str, Any]:
+def custom_agno(input_obj: Attachment | AttachmentCollection, prompt: str = "") -> dict[str, Any]:
     return convert_attachments_to_agno(input_obj, prompt)
 
-att = Attachments("https://upload.wikimedia.org/wikipedia/commons/0/0c/GoldenGateBridge-001.jpg",
-                  "https://upload.wikimedia.org/wikipedia/commons/2/2c/Llama_willu.jpg")
+
+att = Attachments(
+    "https://upload.wikimedia.org/wikipedia/commons/0/0c/GoldenGateBridge-001.jpg",
+    "https://upload.wikimedia.org/wikipedia/commons/2/2c/Llama_willu.jpg",
+)
 
 res = agent.run(**att.custom_agno("What do you see in this image?"))
 res.content
@@ -383,14 +415,17 @@ res.content
 #
 # Let's do a quick test with a PDF file:
 # %%
-att = Attachments("https://upload.wikimedia.org/wikipedia/commons/f/f0/Strange_stories_%28microform%29_%28IA_cihm_05072%29.pdf[1-4]")
+att = Attachments(
+    "https://upload.wikimedia.org/wikipedia/commons/f/f0/Strange_stories_%28microform%29_%28IA_cihm_05072%29.pdf[1-4]"
+)
 res = agent.run(**att.custom_agno("Summarize this document"))
 res.content
 
 # %% [markdown]
 # And that's exactly it!
-#%%
+# %%
 from IPython.display import HTML
+
 HTML(f"<img src='{att.images[0]}'>")
 # %% [markdown]
 # ## Conclusion

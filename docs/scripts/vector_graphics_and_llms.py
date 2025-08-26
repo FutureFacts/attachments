@@ -9,14 +9,14 @@
 # Let's begin by using the highest-level interface that seamlessly integrates with DSPy for AI-powered analysis.
 
 # %%
+import dspy
 from attachments.dspy import Attachments
 from IPython.display import HTML, display
-import dspy
 
 # %% [markdown]
 # We configure DSPy with a capable model for multimodal analysis.
 # %%
-dspy.configure(lm=dspy.LM('openai/o3', max_tokens=16000))
+dspy.configure(lm=dspy.LM("openai/o3", max_tokens=16000))
 
 # %% [markdown]
 # We create an `Attachments` context for the SVG URL. The DSPy-optimized version automatically handles fetching, parsing, and presenting both text and images in a format ready for DSPy signatures.
@@ -45,6 +45,7 @@ display(HTML(f"<img src='{ctx.images[0]}' style='max-width: 300px;'>"))
 # Now we'll demonstrate the true power: seamless multimodal AI analysis with minimal code.
 # The DSPy-optimized Attachments work directly in signatures without any adapter calls.
 
+
 # %%
 # %% [markdown]
 # Define DSPy signatures for SVG analysis and improvement.
@@ -52,10 +53,17 @@ display(HTML(f"<img src='{ctx.images[0]}' style='max-width: 300px;'>"))
 class AnalyzeDesign(dspy.Signature):
     """Analyze SVG design and suggest one concrete improvement."""
 
-    document: Attachments = dspy.InputField(description="SVG document with markup and rendered image")
+    document: Attachments = dspy.InputField(
+        description="SVG document with markup and rendered image"
+    )
 
-    analysis: str = dspy.OutputField(description="Brief analysis of the design elements and visual appeal")
-    improvement: str = dspy.OutputField(description="One specific, actionable improvement suggestion")
+    analysis: str = dspy.OutputField(
+        description="Brief analysis of the design elements and visual appeal"
+    )
+    improvement: str = dspy.OutputField(
+        description="One specific, actionable improvement suggestion"
+    )
+
 
 class GenerateImprovedSVG(dspy.Signature):
     """Generate an improved SVG based on analysis."""
@@ -63,7 +71,10 @@ class GenerateImprovedSVG(dspy.Signature):
     original_document: Attachments = dspy.InputField(description="Original SVG document")
     improvement_idea: str = dspy.InputField(description="Specific improvement to implement")
 
-    improved_complete_svg: str = dspy.OutputField(description="Enhanced SVG markup with the improvement applied")
+    improved_complete_svg: str = dspy.OutputField(
+        description="Enhanced SVG markup with the improvement applied"
+    )
+
 
 # %% [markdown]
 # ### The Magic: Direct Integration
@@ -91,10 +102,7 @@ analysis_result.improvement
 #
 # Now let's apply the suggested improvement:
 # %%
-improvement_result = generator(
-    original_document=ctx,
-    improvement_idea=analysis_result.improvement
-)
+improvement_result = generator(original_document=ctx, improvement_idea=analysis_result.improvement)
 # %% [markdown]
 # The length of the improved SVG:
 # %%
@@ -111,13 +119,11 @@ print(improvement_result.improved_complete_svg)
 
 # %% [markdown]
 # ## 4. Loading Improved SVG Back into Attachments
-# 
+#
 # Now let's demonstrate the full cycle by loading our AI-improved SVG back into the attachments library.
 # We'll do this entirely in-memory without touching the disk - much more elegant!
 
 # %%
-from io import StringIO
-from PIL import Image as PILImage
 import base64
 
 # Create an in-memory SVG and load it directly into attachments
@@ -152,24 +158,32 @@ print(f"Improved images: {len(improved_ctx.images)}")
 print("🖼️ VISUAL COMPARISON")
 print("=" * 30)
 print("Original SVG:")
-display(HTML(f"<div style='display: inline-block; margin: 10px;'><h4>Original</h4><img src='{ctx.images[0]}' style='max-width: 250px; border: 1px solid #ccc;'></div>"))
+display(
+    HTML(
+        f"<div style='display: inline-block; margin: 10px;'><h4>Original</h4><img src='{ctx.images[0]}' style='max-width: 250px; border: 1px solid #ccc;'></div>"
+    )
+)
 
 print("Improved SVG:")
 if improved_ctx.images:
-    display(HTML(f"<div style='display: inline-block; margin: 10px;'><h4>Improved</h4><img src='{improved_ctx.images[0]}' style='max-width: 250px; border: 1px solid #ccc;'></div>"))
+    display(
+        HTML(
+            f"<div style='display: inline-block; margin: 10px;'><h4>Improved</h4><img src='{improved_ctx.images[0]}' style='max-width: 250px; border: 1px solid #ccc;'></div>"
+        )
+    )
 else:
     print("⚠️ No images rendered for improved SVG")
 
 # %% [markdown]
 # ### Key Insights from the In-Memory Cycle
-# 
+#
 # This demonstration shows the complete in-memory workflow:
 # 1. **Load** original content with attachments
-# 2. **Analyze** using DSPy AI signatures  
+# 2. **Analyze** using DSPy AI signatures
 # 3. **Generate** improvements with AI
 # 4. **Reload** improved content directly from memory (no disk I/O!)
 # 5. **Compare** results visually and quantitatively
-# 
+#
 # The data URL approach (`data:image/svg+xml;base64,...`) allows us to work entirely in-memory,
 # making the workflow faster and more elegant for dynamic content generation.
 

@@ -33,13 +33,13 @@
 # `attachments` provides the sample files.
 
 # %%
-import os
-import tempfile
 import base64
 import io
+import os
+
 import pyvista as pv
-from IPython.display import HTML, display
 from attachments.data import get_sample_path
+from IPython.display import HTML, display
 
 # Get paths to our sample 3D files
 GLB_PATH = get_sample_path("demo.glb")
@@ -49,15 +49,18 @@ GLB_PATH = get_sample_path("demo.glb")
 # PyVista's `read` function automatically handles different file formats.
 # We'll create a simple loading function.
 
+
 # %%
 def load_3d_file(path: str):
     """Load a .glb or .gltf file using PyVista."""
     return pv.read(path)
 
+
 # %% [markdown]
 # ## 2 · Producing a turn-table of PNGs
 # We'll rotate the camera around the object and render snapshots into a temporary folder.
 # Using `Plotter(off_screen=True)` allows for rendering without a visible window, which is perfect for scripts.
+
 
 # %%
 def render_turntable(mesh, n_views: int = 8, size: int = 512):
@@ -65,7 +68,7 @@ def render_turntable(mesh, n_views: int = 8, size: int = 512):
     images_bytes = []
 
     plotter = pv.Plotter(off_screen=True, window_size=[size, size])
-    plotter.add_mesh(mesh, color='lightblue', show_edges=True)
+    plotter.add_mesh(mesh, color="lightblue", show_edges=True)
     plotter.add_axes(viewport=(0, 0, 0.4, 0.4))  # Make the axes widget larger
     plotter.view_isometric()
 
@@ -81,9 +84,11 @@ def render_turntable(mesh, n_views: int = 8, size: int = 512):
     plotter.close()
     return images_bytes
 
+
 # %% [markdown]
 # ## 3 · Inline HTML display
 # This helper function takes the generated PNGs and displays them in the notebook.
+
 
 # %%
 def show_images_inline(images_bytes, cols=4, thumb=150):
@@ -94,11 +99,12 @@ def show_images_inline(images_bytes, cols=4, thumb=150):
 
         style = f"width:{thumb}px; display:inline-block; margin:2px; border:1px solid #ddd"
         images_html += f'<img src="data:image/png;base64,{b64}" style="{style}" />'
-        
+
         if (i + 1) % cols == 0 and i < len(images_bytes) - 1:
             images_html += "<br>"
-            
+
     display(HTML(images_html))
+
 
 # %% [markdown]
 # ## 4 · Demo time ✨
@@ -127,16 +133,16 @@ for sample in [("GLB file", GLB_PATH)]:
 
 # %%
 # Let's process the newly converted Llama model
-LLAMA_PATH = get_sample_path("Llama.blend").replace('.blend', '.glb') # Assuming it's converted
+LLAMA_PATH = get_sample_path("Llama.blend").replace(".blend", ".glb")  # Assuming it's converted
 
 if os.path.exists(LLAMA_PATH):
     print(f"\n⏳ Llama GLB file: {os.path.basename(LLAMA_PATH)}")
     llama_mesh = load_3d_file(LLAMA_PATH)
-    
+
     # The Llama model is oriented Z-up, but PyVista expects Y-up.
     # We'll rotate it -90 degrees on the X-axis to correct it.
     llama_mesh.rotate_x(-90, inplace=True)
-    
+
     images_bytes = render_turntable(llama_mesh, n_views=16)
     show_images_inline(images_bytes)
 else:
@@ -163,15 +169,17 @@ else:
 
 from attachments.core import Attachment, loader
 
+
 def gltf_match(att: Attachment) -> bool:
     """Matches .glb and .gltf files, whether local or on the web."""
-    return att.path.lower().endswith(('.glb', '.gltf'))
+    return att.path.lower().endswith((".glb", ".gltf"))
+
 
 @loader(match=gltf_match)
 def load_gltf_or_glb(att: Attachment) -> Attachment:
     """
     Loads .gltf and .glb files into a PyVista mesh object.
-    
+
     This loader is a best-practice example:
     - It uses a `match` function to identify applicable files.
     - It uses `att.input_source` to work with both local paths and URLs.
@@ -181,30 +189,35 @@ def load_gltf_or_glb(att: Attachment) -> Attachment:
     try:
         import pyvista as pv
     except ImportError:
-        raise ImportError("pyvista is required for 3D model loading. Install with: `uv pip install pyvista`")
-        
+        raise ImportError(
+            "pyvista is required for 3D model loading. Install with: `uv pip install pyvista`"
+        )
+
     try:
         # Use att.input_source to handle local files and URLs seamlessly.
         data = pv.read(att.input_source)
-        
+
         # If pv.read returns a MultiBlock container, we'll combine it into a single mesh.
         # This ensures our presenters receive a renderable pv.DataSet.
         if isinstance(data, pv.MultiBlock):
             mesh = data.combine(merge_points=True)
         else:
             mesh = data
-        
+
         # Store the loaded mesh in `_obj` for the dispatcher.
         att._obj = mesh
-        
+
         # Add relevant metadata.
-        att.metadata['content_type'] = 'model/gltf-binary' if att.path.endswith('.glb') else 'model/gltf+json'
-        att.metadata['3d_bounds'] = mesh.bounds
+        att.metadata["content_type"] = (
+            "model/gltf-binary" if att.path.endswith(".glb") else "model/gltf+json"
+        )
+        att.metadata["3d_bounds"] = mesh.bounds
 
     except Exception as e:
         att.text = f"Failed to load 3D model with PyVista: {e}"
-        
+
     return att
+
 
 # %% [markdown]
 # ### 6.2 · The Presenter
@@ -222,6 +235,7 @@ def load_gltf_or_glb(att: Attachment) -> Attachment:
 # %%
 import numpy as np
 
+
 def align_major_axis_to_y(mesh):
     """
     Rotates a pyvista mesh so its longest dimension aligns with the Y-axis.
@@ -230,23 +244,25 @@ def align_major_axis_to_y(mesh):
     bounds = mesh.bounds
     extents = [bounds[1] - bounds[0], bounds[3] - bounds[2], bounds[5] - bounds[4]]
     major_axis_index = np.argmax(extents)
-    
+
     status = "Mesh is already Y-up."
     if major_axis_index != 1:
-        align_axis = ['X', 'Y', 'Z'][major_axis_index]
+        align_axis = ["X", "Y", "Z"][major_axis_index]
         status = f"Aligned to Y-up (longest dimension was on {align_axis}-axis)."
         if major_axis_index == 0:  # Longest axis is X, rotate around Z to bring X to Y
             mesh.rotate_z(90, inplace=True)
         elif major_axis_index == 2:  # Longest axis is Z, rotate around X to bring Z to Y
             mesh.rotate_x(-90, inplace=True)
-            
+
     return mesh, status
+
 
 # %% [markdown]
 # Now we can define the presenters. The `@presenter` decorator, combined with type hints, tells Attachments to run these functions when it finds a PyVista mesh in `att._obj`.
 
 # %%
 from attachments.core import presenter
+
 
 @presenter
 def images(att: Attachment, mesh: pv.DataSet) -> Attachment:
@@ -256,28 +272,28 @@ def images(att: Attachment, mesh: pv.DataSet) -> Attachment:
     """
     try:
         # Avoid re-rendering if images have already been generated
-        if '3d_views' in att.metadata:
+        if "3d_views" in att.metadata:
             return att
 
         # 1. Auto-orient the mesh and get the status for metadata.
         aligned_mesh, align_status = align_major_axis_to_y(mesh)
-        
+
         # 2. Render the turntable to get a list of PNG image bytes.
         png_bytes_list = render_turntable(aligned_mesh, n_views=16)
 
         # 3. Add images and metadata for other presenters.
-        att.metadata['3d_views'] = len(png_bytes_list)
-        att.metadata['3d_auto_align_status'] = align_status
+        att.metadata["3d_views"] = len(png_bytes_list)
+        att.metadata["3d_auto_align_status"] = align_status
 
         print(len(att.images))
         for png_bytes in png_bytes_list:
-            b64_string = base64.b64encode(png_bytes).decode('utf-8')
+            b64_string = base64.b64encode(png_bytes).decode("utf-8")
             att.images.append(f"data:image/png;base64,{b64_string}")
 
     except Exception as e:
-        att.metadata['3d_images_presenter_error'] = str(e)
+        att.metadata["3d_images_presenter_error"] = str(e)
         att.text += f"\n\n*Error generating 3D turntable: {e}*\n"
-        
+
     return att
 
 
@@ -292,8 +308,8 @@ def markdown(att: Attachment, mesh: pv.DataSet) -> Attachment:
         att.text += f"\n\n## 3D Model Summary: {model_name}\n"
 
         # Check for metadata from the images presenter.
-        if '3d_views' in att.metadata:
-            status = att.metadata.get('3d_auto_align_status', 'Alignment status unknown')
+        if "3d_views" in att.metadata:
+            status = att.metadata.get("3d_auto_align_status", "Alignment status unknown")
             att.text += f"A {att.metadata['3d_views']}-view turntable of the model has been rendered ({status}).\n"
         else:
             att.text += "This is a 3D model object. To see a visual representation, include the `images` presenter in the pipeline.\n"
@@ -302,10 +318,11 @@ def markdown(att: Attachment, mesh: pv.DataSet) -> Attachment:
         att.text += f"- **Bounds**: `{mesh.bounds}`\n"
 
     except Exception as e:
-        att.metadata['3d_markdown_presenter_error'] = str(e)
+        att.metadata["3d_markdown_presenter_error"] = str(e)
         att.text += f"\n\n*Error generating 3D model summary: {e}*\n"
-        
+
     return att
+
 
 # %% [markdown]
 # ## 7 · Putting It All Together: Explicit Pipelines
@@ -321,15 +338,12 @@ from attachments import attach, load, present
 
 # Define our explicit pipeline for 3D models
 # It chains our custom loader with our `images` and `markdown` presenters.
-glb_pipeline = (
-    load.load_gltf_or_glb
-    | present.images + present.markdown
-)
+glb_pipeline = load.load_gltf_or_glb | present.images + present.markdown
 
 # Now, let's process the Llama file with our specific pipeline
-LLAMA_PATH = get_sample_path("Llama.blend").replace('.blend', '.glb')
+LLAMA_PATH = get_sample_path("Llama.blend").replace(".blend", ".glb")
 
-#%%
+# %%
 llama_attachment = attach(LLAMA_PATH) | glb_pipeline
 
 print(llama_attachment.text)
@@ -338,30 +352,25 @@ print(f"\nNumber of images extracted: {len(llama_attachment.images)}")
 # Display the images that are now part of the attachment object
 images_html = ""
 for i, data_url in enumerate(llama_attachment.images):
-    style = f"width:150px; display:inline-block; margin:2px; border:1px solid #ddd"
+    style = "width:150px; display:inline-block; margin:2px; border:1px solid #ddd"
     images_html += f'<img src="{data_url}" style="{style}" />'
     if (i + 1) % 4 == 0:
         images_html += "<br>"
 display(HTML(images_html))
-#%%
-
-
+# %%
 
 
 import openai
 from attachments import attach, load, present
 
-glb_pipeline = (
-    load.load_gltf_or_glb
-    | present.images + present.markdown
-)
+glb_pipeline = load.load_gltf_or_glb | present.images + present.markdown
 
 client = openai.OpenAI()
 llama_attachment = attach(LLAMA_PATH) | glb_pipeline
 
 resp = client.responses.create(
     input=llama_attachment.openai_responses("Describe this 3D model"),
-    model="gpt-4.1-nano"  # You can also use "gpt-4o"
+    model="gpt-4.1-nano",  # You can also use "gpt-4o"
 )
 print(resp.output[0].content[0].text)
 
@@ -374,11 +383,12 @@ print(resp.output[0].content[0].text)
 # Anthropic Claude (vision-capable)
 try:
     import anthropic
+
     claude = anthropic.Anthropic()
     claude_msg = claude.messages.create(
         model="claude-3-5-haiku-20241022",
         max_tokens=1024,
-        messages=llama_attachment.claude("Describe this 3D model:")
+        messages=llama_attachment.claude("Describe this 3D model:"),
     )
     print("Claude:", claude_msg.content)
 except ImportError:
@@ -388,6 +398,7 @@ except ImportError:
 # Agno agent
 try:
     from agno import Agent
+
     agent = Agent(model="gpt-4o-mini")
     agno_resp = agent.run(llama_attachment.agno("Describe this 3D model:"))
     print("Agno response:", agno_resp)
@@ -398,12 +409,10 @@ except ImportError:
 # DSPy chain
 try:
     import dspy
+
     dspy.configure(lm=dspy.LM("openai/gpt-4o-mini"))
     rag = dspy.ChainOfThought("question, document -> answer")
-    result = rag(
-        question="What does this 3D model depict?",
-        document=llama_attachment.dspy()
-    )
+    result = rag(question="What does this 3D model depict?", document=llama_attachment.dspy())
     print("DSPy answer:", getattr(result, "answer", result))
 except ImportError:
     print("dspy not installed; skipping DSPy example")

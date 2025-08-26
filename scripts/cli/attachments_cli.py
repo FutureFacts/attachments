@@ -6,8 +6,9 @@ This script accepts one or more file or directory paths and an optional DSL
 string to control processing. It prints the aggregated text output to stdout.
 """
 
-import sys
 import argparse
+import sys
+
 from attachments import Attachments, set_verbose
 
 
@@ -15,20 +16,15 @@ def main():
     parser = argparse.ArgumentParser(
         description="Convert files or directories into LLM-ready text via Attachments DSL."
     )
+    parser.add_argument("paths", nargs="+", help="One or more file or directory paths to process.")
     parser.add_argument(
-        "paths",
-        nargs="+",
-        help="One or more file or directory paths to process."
-    )
-    parser.add_argument(
-        "-d", "--dsl",
+        "-d",
+        "--dsl",
         default="",
-        help="Optional DSL fragment to append to each path, e.g. \"[files:true][mode:report]\""
+        help='Optional DSL fragment to append to each path, e.g. "[files:true][mode:report]"',
     )
     parser.add_argument(
-        "-q", "--quiet",
-        action="store_true",
-        help="Suppress verbose logging (default is verbose)."
+        "-q", "--quiet", action="store_true", help="Suppress verbose logging (default is verbose)."
     )
 
     args = parser.parse_args()

@@ -2,7 +2,7 @@
 
 # All loader functions have been moved to organized modules:
 # - Documents: attachments/loaders/documents/ (PDF, Office, Text, HTML)
-# - Media: attachments/loaders/media/ (Images, Archives)  
+# - Media: attachments/loaders/media/ (Images, Archives)
 # - Data: attachments/loaders/data/ (CSV)
 # - Web: attachments/loaders/web/ (URLs)
 # - Repositories: attachments/loaders/repositories/ (Git, Directories)

@@ -7,7 +7,8 @@ DSL (Domain-Specific Language) commands. It uses the Levenshtein distance
 algorithm to find the closest match from a list of valid commands.
 """
 
-from typing import Optional, Iterable
+from collections.abc import Iterable
+
 
 def levenshtein_distance(s1: str, s2: str) -> int:
     """
@@ -30,10 +31,13 @@ def levenshtein_distance(s1: str, s2: str) -> int:
             substitutions = previous_row[j] + (c1 != c2)
             current_row.append(min(insertions, deletions, substitutions))
         previous_row = current_row
-    
+
     return previous_row[-1]
 
-def find_closest_command(mistyped_command: str, valid_commands: Iterable[str], max_distance: int = 2) -> Optional[str]:
+
+def find_closest_command(
+    mistyped_command: str, valid_commands: Iterable[str], max_distance: int = 2
+) -> str | None:
     """
     Finds the closest valid command to a mistyped one.
 
@@ -46,8 +50,8 @@ def find_closest_command(mistyped_command: str, valid_commands: Iterable[str], m
     Returns:
         The closest command name, or None if no close match is found.
     """
-    best_match: Optional[str] = None
-    min_distance = max_distance + 1 
+    best_match: str | None = None
+    min_distance = max_distance + 1
 
     for valid_cmd in valid_commands:
         distance = levenshtein_distance(mistyped_command, valid_cmd)
@@ -57,22 +61,35 @@ def find_closest_command(mistyped_command: str, valid_commands: Iterable[str], m
 
     if min_distance <= max_distance:
         return best_match
-    
-    return None 
 
-VALID_FORMATS = ['plain', 'text', 'txt', 'markdown', 'md', 'html', 'code', 'xml', 'csv', 'structured']
+    return None
 
-def suggest_format_command(format_value: str) -> Optional[str]:
+
+VALID_FORMATS = [
+    "plain",
+    "text",
+    "txt",
+    "markdown",
+    "md",
+    "html",
+    "code",
+    "xml",
+    "csv",
+    "structured",
+]
+
+
+def suggest_format_command(format_value: str) -> str | None:
     """
     Finds the closest valid format command if the provided one is invalid.
-    
+
     Args:
         format_value: The format value provided by the user.
-        
+
     Returns:
         The closest valid format, or None if the input is already valid or no close match is found.
     """
     if format_value in VALID_FORMATS:
-        return None # It's already valid
+        return None  # It's already valid
 
-    return find_closest_command(format_value, VALID_FORMATS) 
+    return find_closest_command(format_value, VALID_FORMATS)

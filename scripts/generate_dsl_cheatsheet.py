@@ -12,27 +12,30 @@ This script is automatically run during:
 The generated file is excluded from version control as it's auto-generated.
 """
 import os
+
 from attachments.dsl_info import get_dsl_info
+
 
 def clean_for_table(text):
     """Clean text for safe inclusion in markdown table."""
     if text is None:
         return "—"
-    
+
     # Convert to string and handle special cases
     text = str(text)
-    
+
     # Replace problematic characters
-    text = text.replace('|', '&#124;')  # Escape pipe characters
-    text = text.replace('\n', ' ')      # Replace newlines with spaces
-    text = text.replace('\r', ' ')      # Replace carriage returns
-    text = text.strip()                 # Remove leading/trailing whitespace
-    
+    text = text.replace("|", "&#124;")  # Escape pipe characters
+    text = text.replace("\n", " ")  # Replace newlines with spaces
+    text = text.replace("\r", " ")  # Replace carriage returns
+    text = text.strip()  # Remove leading/trailing whitespace
+
     # Handle empty strings
     if not text:
         return "—"
-    
+
     return text
+
 
 def format_value(value):
     """Format a value for display in the table."""
@@ -44,7 +47,9 @@ def format_value(value):
         if not clean_value or clean_value == "—":
             return "—"
         # For very short strings that are just symbols, display them raw
-        if len(clean_value) <= 10 and all(c in '=-_~*+#@!$%^&()<>[]{}|\\/:;.,' for c in clean_value.replace(' ', '')):
+        if len(clean_value) <= 10 and all(
+            c in "=-_~*+#@!$%^&()<>[]{}|\\/:;.," for c in clean_value.replace(" ", "")
+        ):
             # Show separator characters in a more readable way
             if clean_value.strip() == "---":
                 return "`---`"
@@ -58,21 +63,22 @@ def format_value(value):
     else:
         return f"`{clean_for_table(str(value))}`"
 
+
 def format_allowable_values(values):
     """Format allowable values list for display."""
     if not values:
         return "—"
-    
+
     # Clean each value
     clean_values = []
     for v in values:
         clean_v = clean_for_table(str(v))
         if clean_v != "—":
             clean_values.append(clean_v)
-    
+
     if not clean_values:
         return "—"
-    
+
     if len(clean_values) <= 3:
         return ", ".join(f"`{v}`" for v in clean_values)
     else:
@@ -80,37 +86,38 @@ def format_allowable_values(values):
         shown = ", ".join(f"`{v}`" for v in clean_values[:3])
         return f"{shown}, ... ({len(clean_values)} total)"
 
+
 def generate_cheatsheet_content():
     """Generates the Markdown table content for the DSL cheatsheet."""
     dsl_info = get_dsl_info()
-    
+
     lines = []
     lines.append("| Command | Type | Default | Allowable Values | Used In |")
     lines.append("|---|---|---|---|---|")
-    
+
     for command in sorted(dsl_info.keys()):
         contexts = dsl_info[command]
-        
+
         # Get information from the first context (they should be consistent)
         first_context = contexts[0]
-        
+
         # Extract enhanced information
-        inferred_type = first_context.get('inferred_type', 'unknown')
-        default_value = first_context.get('default_value')
-        allowable_values = first_context.get('allowable_values', [])
-        description = first_context.get('description', '')
-        
+        inferred_type = first_context.get("inferred_type", "unknown")
+        default_value = first_context.get("default_value")
+        allowable_values = first_context.get("allowable_values", [])
+        description = first_context.get("description", "")
+
         # Format the "Used In" column
         used_in_parts = []
         for ctx in contexts:
             used_in_parts.append(f"`{clean_for_table(ctx['used_in'])}`")
         used_in_str = "<br>".join(used_in_parts)
-        
+
         # Format table cells
-        type_cell = f"`{clean_for_table(inferred_type)}`" if inferred_type != 'unknown' else "—"
+        type_cell = f"`{clean_for_table(inferred_type)}`" if inferred_type != "unknown" else "—"
         default_cell = format_value(default_value)
         allowable_cell = format_allowable_values(allowable_values)
-        
+
         # Format command cell with optional description
         command_cell = f"`{clean_for_table(command)}`"
         if description and len(description.strip()) > 0:
@@ -121,25 +128,33 @@ def generate_cheatsheet_content():
                 clean_desc = clean_desc[:37] + "..."
             # Only add description if it's meaningful and different from command
             if clean_desc and clean_desc != "—" and clean_desc.lower() != command.lower():
-                command_cell = f"`{clean_for_table(command)}`<br><small><em>{clean_desc}</em></small>"
-        
+                command_cell = (
+                    f"`{clean_for_table(command)}`<br><small><em>{clean_desc}</em></small>"
+                )
+
         # Build the table row
-        row = f"| {command_cell} | {type_cell} | {default_cell} | {allowable_cell} | {used_in_str} |"
+        row = (
+            f"| {command_cell} | {type_cell} | {default_cell} | {allowable_cell} | {used_in_str} |"
+        )
         lines.append(row)
-        
+
     return "\n".join(lines)
+
 
 def main():
     """Main function to generate and write the cheatsheet."""
     content = generate_cheatsheet_content()
-    
+
     # The output path should be relative to the docs directory
-    output_path = os.path.join(os.path.dirname(__file__), '..', 'docs', '_generated_dsl_cheatsheet.md')
-    
-    with open(output_path, 'w') as f:
+    output_path = os.path.join(
+        os.path.dirname(__file__), "..", "docs", "_generated_dsl_cheatsheet.md"
+    )
+
+    with open(output_path, "w") as f:
         f.write(content)
-        
+
     print(f"✅ DSL cheatsheet successfully generated at {output_path}")
 
+
 if __name__ == "__main__":
-    main() 
+    main()

@@ -3,7 +3,7 @@
 #
 # This tutorial demonstrates how to use the intelligent URL morphing system to process files from URLs without hardcoded file type detection.
 #
-# 
+#
 # %%
 from attachments import attach, load, modify, present
 
@@ -23,11 +23,13 @@ from attachments import attach, load, modify, present
 #
 # %%
 # Download and morph a PDF from URL
-pdf_attachment = (attach("https://github.com/MaximeRivest/attachments/raw/main/src/attachments/data/sample.pdf") |
-                 load.url_to_response |           # Step 1: Download content
-                 modify.morph_to_detected_type |  # Step 2: Detect file type intelligently  
-                 load.pdf_to_pdfplumber |         # Step 3: Load with appropriate loader
-                 present.text)                    # Step 4: Extract content
+pdf_attachment = (
+    attach("https://github.com/MaximeRivest/attachments/raw/main/src/attachments/data/sample.pdf")
+    | load.url_to_response  # Step 1: Download content
+    | modify.morph_to_detected_type  # Step 2: Detect file type intelligently
+    | load.pdf_to_pdfplumber  # Step 3: Load with appropriate loader
+    | present.text
+)  # Step 4: Extract content
 
 # %% [markdown]
 # Let's see what we got:
@@ -48,9 +50,9 @@ pdf_attachment.path
 # The original URL was transformed to a clean filename. Let's see the detection metadata:
 # %%
 {
-    'detected_extension': pdf_attachment.metadata.get('detected_extension'),
-    'detection_method': pdf_attachment.metadata.get('detection_method'),
-    'content_type': pdf_attachment.metadata.get('response_content_type')
+    "detected_extension": pdf_attachment.metadata.get("detected_extension"),
+    "detection_method": pdf_attachment.metadata.get("detection_method"),
+    "content_type": pdf_attachment.metadata.get("response_content_type"),
 }
 
 # %% [markdown]
@@ -69,11 +71,15 @@ pdf_attachment.path
 #
 # %%
 # PowerPoint presentation
-pptx_result = (attach("https://github.com/MaximeRivest/attachments/raw/main/src/attachments/data/sample_multipage.pptx") |
-               load.url_to_response |
-               modify.morph_to_detected_type |
-               load.pptx_to_python_pptx |
-               present.text)
+pptx_result = (
+    attach(
+        "https://github.com/MaximeRivest/attachments/raw/main/src/attachments/data/sample_multipage.pptx"
+    )
+    | load.url_to_response
+    | modify.morph_to_detected_type
+    | load.pptx_to_python_pptx
+    | present.text
+)
 
 # %% [markdown]
 # PowerPoint content length:
@@ -87,11 +93,13 @@ pptx_result.path
 
 # %%
 # Markdown file
-md_result = (attach("https://raw.githubusercontent.com/MaximeRivest/attachments/main/README.md") |
-             load.url_to_response |
-             modify.morph_to_detected_type |
-             load.text_to_string |
-             present.text)
+md_result = (
+    attach("https://raw.githubusercontent.com/MaximeRivest/attachments/main/README.md")
+    | load.url_to_response
+    | modify.morph_to_detected_type
+    | load.text_to_string
+    | present.text
+)
 
 # %% [markdown]
 # Markdown content length:
@@ -111,10 +119,12 @@ md_result.path
 # Let's see what happens without morphing:
 # %%
 # This will fail - PDF loader won't recognize the URL
-failed_attempt = (attach("https://github.com/MaximeRivest/attachments/raw/main/src/attachments/data/sample.pdf") |
-                 load.url_to_response |           # Downloads content
-                 load.pdf_to_pdfplumber |         # But matcher fails - path is still a URL!
-                 present.text)
+failed_attempt = (
+    attach("https://github.com/MaximeRivest/attachments/raw/main/src/attachments/data/sample.pdf")
+    | load.url_to_response  # Downloads content
+    | load.pdf_to_pdfplumber  # But matcher fails - path is still a URL!
+    | present.text
+)
 
 # %% [markdown]
 # Without morphing, the content isn't processed correctly:
@@ -134,7 +144,9 @@ failed_attempt.text
 from attachments import Attachments
 
 # This automatically uses morphing
-auto_result = Attachments("https://github.com/MaximeRivest/attachments/raw/main/src/attachments/data/sample.pdf")
+auto_result = Attachments(
+    "https://github.com/MaximeRivest/attachments/raw/main/src/attachments/data/sample.pdf"
+)
 auto_text = str(auto_result)
 
 # %% [markdown]
@@ -153,7 +165,9 @@ auto_text[:200]
 # Let's trace through how morphing detects a PDF file:
 # %%
 # Create an attachment with PDF URL
-pdf_url = attach("https://github.com/MaximeRivest/attachments/raw/main/src/attachments/data/sample.pdf")
+pdf_url = attach(
+    "https://github.com/MaximeRivest/attachments/raw/main/src/attachments/data/sample.pdf"
+)
 
 # Step 1: Download
 downloaded = pdf_url | load.url_to_response
@@ -162,7 +176,7 @@ print(f"  Path: {downloaded.path}")
 print(f"  Content-Type: {downloaded.metadata.get('content_type')}")
 print(f"  Object type: {type(downloaded._obj)}")
 
-# Step 2: Morph  
+# Step 2: Morph
 morphed = downloaded | modify.morph_to_detected_type
 print("\nAfter morphing:")
 print(f"  Path: {morphed.path}")
@@ -188,7 +202,7 @@ print(f"  Detection method: {morphed.metadata.get('detection_method')}")
 #
 # URL morphing enables seamless processing of any file type from URLs by:
 # - Downloading content intelligently
-# - Detecting file types using multiple strategies  
+# - Detecting file types using multiple strategies
 # - Transforming attachments so existing loaders can process them
 # - Maintaining zero hardcoded file type lists
 #

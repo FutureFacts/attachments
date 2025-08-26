@@ -2,6 +2,4 @@
 
 from .info import *
 
-__all__ = [
-    'metadata'
-] 
+__all__ = ["metadata"]

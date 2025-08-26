@@ -2,6 +2,4 @@
 
 from .images import *
 
-__all__ = [
-    'images'
-] 
+__all__ = ["images"]

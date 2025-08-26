@@ -1,132 +1,194 @@
 """Utility functions for repository and directory processing."""
 
-import os
 import fnmatch
 import glob
+import os
 import re
-from typing import List, Dict, Any
+from typing import Any
 
 
-def get_ignore_patterns(base_path: str, ignore_command: str) -> List[str]:
+def get_ignore_patterns(base_path: str, ignore_command: str) -> list[str]:
     """Get ignore patterns based on DSL command."""
-    if ignore_command == 'standard':
+    if ignore_command == "standard":
         return [
             # Hidden files and directories
-            '.*', '.*/.*',
+            ".*",
+            ".*/.*",
             # Git
-            '.git', '.git/*', '**/.git/*',
+            ".git",
+            ".git/*",
+            "**/.git/*",
             # Python
-            '__pycache__', '__pycache__/*', '**/__pycache__/*',
-            '*.pyc', '*.pyo', '*.pyd',
+            "__pycache__",
+            "__pycache__/*",
+            "**/__pycache__/*",
+            "*.pyc",
+            "*.pyo",
+            "*.pyd",
             # Virtual environments (comprehensive patterns)
-            '.venv', '.venv/*', '**/.venv/*',
-            'venv', 'venv/*', '**/venv/*',
-            'env', 'env/*', '**/env/*',
+            ".venv",
+            ".venv/*",
+            "**/.venv/*",
+            "venv",
+            "venv/*",
+            "**/venv/*",
+            "env",
+            "env/*",
+            "**/env/*",
             # Additional Python environment patterns
-            'python-env', 'python-env/*', '**/python-env/*',
-            '*-env', '*-env/*', '**/*-env/*',
-            'site-packages', 'site-packages/*', '**/site-packages/*',
-            'pyvenv.cfg',
+            "python-env",
+            "python-env/*",
+            "**/python-env/*",
+            "*-env",
+            "*-env/*",
+            "**/*-env/*",
+            "site-packages",
+            "site-packages/*",
+            "**/site-packages/*",
+            "pyvenv.cfg",
             # Node.js
-            'node_modules', 'node_modules/*', '**/node_modules/*',
+            "node_modules",
+            "node_modules/*",
+            "**/node_modules/*",
             # Package manager lock files
-            'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml',
-            'Cargo.lock', 'poetry.lock', 'Pipfile.lock', 'uv.lock',
+            "package-lock.json",
+            "yarn.lock",
+            "pnpm-lock.yaml",
+            "Cargo.lock",
+            "poetry.lock",
+            "Pipfile.lock",
+            "uv.lock",
             # Environment files
-            '.env', '.env.*',
+            ".env",
+            ".env.*",
             # Logs and temporary files
-            '*.log', '*.tmp', '*.cache',
+            "*.log",
+            "*.tmp",
+            "*.cache",
             # OS files
-            '.DS_Store', 'Thumbs.db',
+            ".DS_Store",
+            "Thumbs.db",
             # Build directories
-            'dist', 'build', 'target', 'out', 'release', '_build'
+            "dist",
+            "build",
+            "target",
+            "out",
+            "release",
+            "_build"
             # Rust specific
-            'target/*', '**/target/*',
+            "target/*",
+            "**/target/*",
             # IDE files
-            '.idea', '.vscode',
+            ".idea",
+            ".vscode",
             # Test and coverage
-            '.pytest_cache', '.coverage',
+            ".pytest_cache",
+            ".coverage",
             # Package directories
-            '*.egg-info', '*.dist-info',
+            "*.egg-info",
+            "*.dist-info",
             # Additional common patterns
-            'tmp', 'temp', '*.swp', '*.swo',
+            "tmp",
+            "temp",
+            "*.swp",
+            "*.swo",
             # Dependency directories
-            'vendor', 'bower_components',
+            "vendor",
+            "bower_components",
             # Large binary/resource directories that are rarely useful for LLMs
-            'resources/binaries', 'resources/binaries/*', '**/resources/binaries/*',
-            'bin', 'bin/*', '**/bin/*',
+            "resources/binaries",
+            "resources/binaries/*",
+            "**/resources/binaries/*",
+            "bin",
+            "bin/*",
+            "**/bin/*",
             # Cache directories
-            'cache', 'cache/*', '**/cache/*',
-            '.cache', '.cache/*', '**/.cache/*',
+            "cache",
+            "cache/*",
+            "**/cache/*",
+            ".cache",
+            ".cache/*",
+            "**/.cache/*",
             # Documentation build outputs
-            'docs/_build', 'docs/_build/*', '**/docs/_build/*'
+            "docs/_build",
+            "docs/_build/*",
+            "**/docs/_build/*"
             # Binaries
-            '.exe', '.deb', '.appimage'
+            ".exe",
+            ".deb",
+            ".appimage",
         ]
-    elif ignore_command == 'minimal':
+    elif ignore_command == "minimal":
         return [
             # Only the most essential ignores
-            '.git', '.git/*', '**/.git/*',
-            '__pycache__', '__pycache__/*', '**/__pycache__/*',
-            '*.pyc', '*.pyo', '*.pyd',
-            '.DS_Store', 'Thumbs.db'
+            ".git",
+            ".git/*",
+            "**/.git/*",
+            "__pycache__",
+            "__pycache__/*",
+            "**/__pycache__/*",
+            "*.pyc",
+            "*.pyo",
+            "*.pyd",
+            ".DS_Store",
+            "Thumbs.db",
         ]
-    elif ignore_command == 'attachmentsignore':
+    elif ignore_command == "attachmentsignore":
         # Use .attachmentsignore file
-        attachments_ignore_path = os.path.join(base_path, '.attachmentsignore')
+        attachments_ignore_path = os.path.join(base_path, ".attachmentsignore")
         patterns = []
         if os.path.exists(attachments_ignore_path):
             try:
-                with open(attachments_ignore_path, 'r', encoding='utf-8') as f:
+                with open(attachments_ignore_path, encoding="utf-8") as f:
                     for line in f:
                         line = line.strip()
-                        if line and not line.startswith('#'):
+                        if line and not line.startswith("#"):
                             patterns.append(line)
             except Exception:
                 pass
         return patterns
-    elif ignore_command == 'gitignore':
+    elif ignore_command == "gitignore":
         # Parse .gitignore file
-        gitignore_path = os.path.join(base_path, '.gitignore')
+        gitignore_path = os.path.join(base_path, ".gitignore")
         patterns = []
         if os.path.exists(gitignore_path):
             try:
-                with open(gitignore_path, 'r', encoding='utf-8') as f:
+                with open(gitignore_path, encoding="utf-8") as f:
                     for line in f:
                         line = line.strip()
-                        if line and not line.startswith('#'):
+                        if line and not line.startswith("#"):
                             patterns.append(line)
             except Exception:
                 pass
         return patterns
-    elif ignore_command == 'auto':
+    elif ignore_command == "auto":
         # Auto-detect: use .attachmentsignore if exists, otherwise .gitignore, otherwise standard
-        attachments_ignore_path = os.path.join(base_path, '.attachmentsignore')
+        attachments_ignore_path = os.path.join(base_path, ".attachmentsignore")
         if os.path.exists(attachments_ignore_path):
-            return get_ignore_patterns(base_path, 'attachmentsignore')
+            return get_ignore_patterns(base_path, "attachmentsignore")
 
-        gitignore_path = os.path.join(base_path, '.gitignore')
+        gitignore_path = os.path.join(base_path, ".gitignore")
         if os.path.exists(gitignore_path):
-            return get_ignore_patterns(base_path, 'gitignore')
+            return get_ignore_patterns(base_path, "gitignore")
 
-        return get_ignore_patterns(base_path, 'standard')
+        return get_ignore_patterns(base_path, "standard")
     elif ignore_command:
         # Custom comma-separated patterns
         # Check for special flags
-        patterns = [pattern.strip() for pattern in ignore_command.split(',')]
+        patterns = [pattern.strip() for pattern in ignore_command.split(",")]
 
         # Check for 'raw' flag - if present, use ONLY the specified patterns (no essentials)
-        if 'raw' in patterns:
+        if "raw" in patterns:
             # Remove 'raw' from patterns and return only user patterns
-            custom_patterns = [p for p in patterns if p != 'raw']
+            custom_patterns = [p for p in patterns if p != "raw"]
             # Special case: 'raw,none' means truly ignore nothing
-            if 'none' in custom_patterns:
+            if "none" in custom_patterns:
                 return []
             return custom_patterns
 
         # Check for 'none' flag - if present, use auto-detection (gitignore or standard)
-        if 'none' in patterns:
-            return get_ignore_patterns(base_path, 'auto')
+        if "none" in patterns:
+            return get_ignore_patterns(base_path, "auto")
 
         # Default behavior: include essential patterns + custom patterns (safe and intuitive)
         custom_patterns = patterns
@@ -134,29 +196,61 @@ def get_ignore_patterns(base_path: str, ignore_command: str) -> List[str]:
         # Include essential patterns that should normally never be processed
         essential_patterns = [
             # Hidden files and directories (massive and rarely useful for LLMs)
-            '.*', '.*/.*',
+            ".*",
+            ".*/.*",
             # Git (always exclude - massive and not useful for LLMs)
-            '.git', '.git/*', '**/.git/*',
+            ".git",
+            ".git/*",
+            "**/.git/*",
             # Python bytecode (always exclude - binary and not useful)
-            '__pycache__', '__pycache__/*', '**/__pycache__/*',
-            '*.pyc', '*.pyo', '*.pyd',
+            "__pycache__",
+            "__pycache__/*",
+            "**/__pycache__/*",
+            "*.pyc",
+            "*.pyo",
+            "*.pyd",
             # Virtual environments (always exclude - massive dependency folders)
-            '.venv', '.venv/*', '**/.venv/*',
-            'venv', 'venv/*', '**/venv/*',
-            'env', 'env/*', '**/env/*',
+            ".venv",
+            ".venv/*",
+            "**/.venv/*",
+            "venv",
+            "venv/*",
+            "**/venv/*",
+            "env",
+            "env/*",
+            "**/env/*",
             # Additional critical Python environment patterns
-            'python-env', 'python-env/*', '**/python-env/*',
-            '*-env', '*-env/*', '**/*-env/*',
-            'site-packages', 'site-packages/*', '**/site-packages/*',
+            "python-env",
+            "python-env/*",
+            "**/python-env/*",
+            "*-env",
+            "*-env/*",
+            "**/*-env/*",
+            "site-packages",
+            "site-packages/*",
+            "**/site-packages/*",
             # Node.js (always exclude - massive dependency folder)
-            'node_modules', 'node_modules/*', '**/node_modules/*',
+            "node_modules",
+            "node_modules/*",
+            "**/node_modules/*",
             # Lock files (always exclude - not useful for LLMs)
-            'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml',
-            'Cargo.lock', 'poetry.lock', 'Pipfile.lock', 'uv.lock',
+            "package-lock.json",
+            "yarn.lock",
+            "pnpm-lock.yaml",
+            "Cargo.lock",
+            "poetry.lock",
+            "Pipfile.lock",
+            "uv.lock",
             # Build directories (always exclude - generated content)
-            'dist', 'build', 'target', 'out', 'release', '_build'
+            "dist",
+            "build",
+            "target",
+            "out",
+            "release",
+            "_build"
             # OS files (always exclude - not useful)
-            '.DS_Store', 'Thumbs.db',
+            ".DS_Store",
+            "Thumbs.db",
         ]
 
         return essential_patterns + custom_patterns
@@ -165,7 +259,7 @@ def get_ignore_patterns(base_path: str, ignore_command: str) -> List[str]:
         return []
 
 
-def should_ignore(file_path: str, base_path: str, ignore_patterns: List[str]) -> bool:
+def should_ignore(file_path: str, base_path: str, ignore_patterns: list[str]) -> bool:
     """Check if file should be ignored based on patterns."""
     # Get relative path from base
     try:
@@ -174,7 +268,7 @@ def should_ignore(file_path: str, base_path: str, ignore_patterns: List[str]) ->
         return True  # Outside base path, ignore
 
     # Normalize path separators
-    rel_path = rel_path.replace('\\', '/')
+    rel_path = rel_path.replace("\\", "/")
 
     for pattern in ignore_patterns:
         # Handle different pattern types
@@ -183,20 +277,26 @@ def should_ignore(file_path: str, base_path: str, ignore_patterns: List[str]) ->
         if fnmatch.fnmatch(os.path.basename(rel_path), pattern):
             return True
         # Handle directory patterns
-        if pattern.endswith('/') and rel_path.startswith(pattern):
+        if pattern.endswith("/") and rel_path.startswith(pattern):
             return True
         # Handle glob patterns
-        if '**' in pattern:
+        if "**" in pattern:
             # Convert ** patterns to fnmatch
-            glob_pattern = pattern.replace('**/', '*/')
+            glob_pattern = pattern.replace("**/", "*/")
             if fnmatch.fnmatch(rel_path, glob_pattern):
                 return True
 
     return False
 
 
-def collect_files(base_path: str, ignore_patterns: List[str], max_files: int = 1000,
-                  glob_pattern: str = '', recursive: bool = True, include_binary: bool = False) -> List[str]:
+def collect_files(
+    base_path: str,
+    ignore_patterns: list[str],
+    max_files: int = 1000,
+    glob_pattern: str = "",
+    recursive: bool = True,
+    include_binary: bool = False,
+) -> list[str]:
     """Collect all files in directory, respecting ignore patterns and glob filters."""
     files = []
 
@@ -204,7 +304,11 @@ def collect_files(base_path: str, ignore_patterns: List[str], max_files: int = 1
         # Recursive directory walk
         for root, dirs, filenames in os.walk(base_path):
             # Filter directories to avoid walking into ignored ones
-            dirs[:] = [d for d in dirs if not should_ignore(os.path.join(root, d), base_path, ignore_patterns)]
+            dirs[:] = [
+                d
+                for d in dirs
+                if not should_ignore(os.path.join(root, d), base_path, ignore_patterns)
+            ]
 
             for filename in filenames:
                 file_path = os.path.join(root, filename)
@@ -261,7 +365,7 @@ def collect_files(base_path: str, ignore_patterns: List[str], max_files: int = 1
     return sorted(files)
 
 
-def collect_files_from_glob(glob_path: str, max_files: int = 1000) -> List[str]:
+def collect_files_from_glob(glob_path: str, max_files: int = 1000) -> list[str]:
     """Collect files using glob pattern."""
     files = []
 
@@ -296,13 +400,13 @@ def get_glob_base_path(glob_path: str) -> str:
     base_parts = []
 
     for part in parts:
-        if any(char in part for char in ['*', '?', '[', ']']):
+        if any(char in part for char in ["*", "?", "[", "]"]):
             break
         base_parts.append(part)
 
     if base_parts:
         # Handle absolute paths properly - preserve leading slash
-        if glob_path.startswith(os.sep) and base_parts[0] == '':
+        if glob_path.startswith(os.sep) and base_parts[0] == "":
             # Absolute path: ['', 'home', 'maxime', ...] -> '/home/maxime/...'
             if len(base_parts) > 1:
                 return os.sep + os.path.join(*base_parts[1:])
@@ -321,7 +425,7 @@ def matches_glob_pattern(file_path: str, base_path: str, glob_pattern: str) -> b
     filename = os.path.basename(file_path)
 
     # Split multiple patterns by comma
-    patterns_to_check = [p.strip() for p in glob_pattern.split(',')]
+    patterns_to_check = [p.strip() for p in glob_pattern.split(",")]
 
     for p_str in patterns_to_check:
         # fnmatch.translate converts glob to regex, handling **, *, ? etc.
@@ -338,9 +442,22 @@ def is_likely_binary(file_path: str) -> bool:
     """Basic heuristic to detect truly problematic binary files."""
     # Only skip files that are truly problematic to process
     problematic_extensions = {
-        '.exe', '.dll', '.so', '.dylib', '.bin', '.obj', '.o',
-        '.pyc', '.pyo', '.pyd', '.class',
-        '.woff', '.woff2', '.ttf', '.otf', '.eot'
+        ".exe",
+        ".dll",
+        ".so",
+        ".dylib",
+        ".bin",
+        ".obj",
+        ".o",
+        ".pyc",
+        ".pyo",
+        ".pyd",
+        ".class",
+        ".woff",
+        ".woff2",
+        ".ttf",
+        ".otf",
+        ".eot",
     }
 
     ext = os.path.splitext(file_path)[1].lower()
@@ -349,10 +466,10 @@ def is_likely_binary(file_path: str) -> bool:
 
     # Try to read first few bytes to detect binary content
     try:
-        with open(file_path, 'rb') as f:
+        with open(file_path, "rb") as f:
             chunk = f.read(1024)
             # If chunk contains null bytes, likely binary
-            if b'\x00' in chunk:
+            if b"\x00" in chunk:
                 return True
     except (OSError, UnicodeDecodeError):
         return True
@@ -360,7 +477,13 @@ def is_likely_binary(file_path: str) -> bool:
     return False
 
 
-def get_directory_structure(base_path: str, files: List[str], include_all_dirs: bool = False, only_dirs_with_files: bool = False, ignore_patterns: List[str] = None) -> Dict[str, Any]:
+def get_directory_structure(
+    base_path: str,
+    files: list[str],
+    include_all_dirs: bool = False,
+    only_dirs_with_files: bool = False,
+    ignore_patterns: list[str] = None,
+) -> dict[str, Any]:
     """Generate tree structure representation with detailed file metadata."""
     import stat
     from datetime import datetime
@@ -378,7 +501,7 @@ def get_directory_structure(base_path: str, files: List[str], include_all_dirs: 
 
         # Collect all directory paths
         for i in range(len(parts) - 1):
-            dir_path = os.path.join(base_path, *parts[:i+1])
+            dir_path = os.path.join(base_path, *parts[: i + 1])
             directories.add(dir_path)
 
     # If include_all_dirs is True, also add all directories in the base path
@@ -387,7 +510,11 @@ def get_directory_structure(base_path: str, files: List[str], include_all_dirs: 
         try:
             for root, dirs, filenames in os.walk(base_path):
                 # Filter out ignored directories during walk
-                dirs[:] = [d for d in dirs if not should_ignore(os.path.join(root, d), base_path, ignore_patterns)]
+                dirs[:] = [
+                    d
+                    for d in dirs
+                    if not should_ignore(os.path.join(root, d), base_path, ignore_patterns)
+                ]
 
                 # Add the current directory
                 if root != base_path:  # Don't add the base path itself
@@ -421,29 +548,31 @@ def get_directory_structure(base_path: str, files: List[str], include_all_dirs: 
         try:
             stat_info = os.stat(dir_path)
             current[parts[-1]] = {
-                'type': 'directory',
-                'size': stat_info.st_size,
-                'modified': stat_info.st_mtime,
-                'permissions': stat.filemode(stat_info.st_mode),
-                'owner': get_owner_name(stat_info.st_uid),
-                'group': get_group_name(stat_info.st_gid),
-                'mode_octal': oct(stat_info.st_mode)[-3:],
-                'inode': stat_info.st_ino,
-                'links': stat_info.st_nlink,
-                'modified_str': datetime.fromtimestamp(stat_info.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+                "type": "directory",
+                "size": stat_info.st_size,
+                "modified": stat_info.st_mtime,
+                "permissions": stat.filemode(stat_info.st_mode),
+                "owner": get_owner_name(stat_info.st_uid),
+                "group": get_group_name(stat_info.st_gid),
+                "mode_octal": oct(stat_info.st_mode)[-3:],
+                "inode": stat_info.st_ino,
+                "links": stat_info.st_nlink,
+                "modified_str": datetime.fromtimestamp(stat_info.st_mtime).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
             }
         except OSError:
             current[parts[-1]] = {
-                'type': 'directory',
-                'size': 0,
-                'modified': 0,
-                'permissions': '?---------',
-                'owner': 'unknown',
-                'group': 'unknown',
-                'mode_octal': '000',
-                'inode': 0,
-                'links': 0,
-                'modified_str': 'unknown'
+                "type": "directory",
+                "size": 0,
+                "modified": 0,
+                "permissions": "?---------",
+                "owner": "unknown",
+                "group": "unknown",
+                "mode_octal": "000",
+                "inode": 0,
+                "links": 0,
+                "modified_str": "unknown",
             }
 
     # Process files
@@ -461,29 +590,31 @@ def get_directory_structure(base_path: str, files: List[str], include_all_dirs: 
         try:
             stat_info = os.stat(file_path)
             current[parts[-1]] = {
-                'type': 'file',
-                'size': stat_info.st_size,
-                'modified': stat_info.st_mtime,
-                'permissions': stat.filemode(stat_info.st_mode),
-                'owner': get_owner_name(stat_info.st_uid),
-                'group': get_group_name(stat_info.st_gid),
-                'mode_octal': oct(stat_info.st_mode)[-3:],
-                'inode': stat_info.st_ino,
-                'links': stat_info.st_nlink,
-                'modified_str': datetime.fromtimestamp(stat_info.st_mtime).strftime('%Y-%m-%d %H:%M:%S')
+                "type": "file",
+                "size": stat_info.st_size,
+                "modified": stat_info.st_mtime,
+                "permissions": stat.filemode(stat_info.st_mode),
+                "owner": get_owner_name(stat_info.st_uid),
+                "group": get_group_name(stat_info.st_gid),
+                "mode_octal": oct(stat_info.st_mode)[-3:],
+                "inode": stat_info.st_ino,
+                "links": stat_info.st_nlink,
+                "modified_str": datetime.fromtimestamp(stat_info.st_mtime).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
             }
         except OSError:
             current[parts[-1]] = {
-                'type': 'file',
-                'size': 0,
-                'modified': 0,
-                'permissions': '?---------',
-                'owner': 'unknown',
-                'group': 'unknown',
-                'mode_octal': '000',
-                'inode': 0,
-                'links': 0,
-                'modified_str': 'unknown'
+                "type": "file",
+                "size": 0,
+                "modified": 0,
+                "permissions": "?---------",
+                "owner": "unknown",
+                "group": "unknown",
+                "mode_octal": "000",
+                "inode": 0,
+                "links": 0,
+                "modified_str": "unknown",
             }
 
     return structure
@@ -493,6 +624,7 @@ def get_owner_name(uid: int) -> str:
     """Get username from UID."""
     try:
         import pwd
+
         return pwd.getpwuid(uid).pw_name
     except (KeyError, ImportError):
         return str(uid)
@@ -502,40 +634,41 @@ def get_group_name(gid: int) -> str:
     """Get group name from GID."""
     try:
         import grp
+
         return grp.getgrgid(gid).gr_name
     except (KeyError, ImportError):
         return str(gid)
 
 
-def get_repo_metadata(repo_path: str) -> Dict[str, Any]:
+def get_repo_metadata(repo_path: str) -> dict[str, Any]:
     """Extract Git repository metadata."""
-    metadata = {
-        'repo_path': repo_path,
-        'is_git_repo': True
-    }
+    metadata = {"repo_path": repo_path, "is_git_repo": True}
 
     try:
         # Try to get Git info using GitPython if available
         import git
+
         repo = git.Repo(repo_path)
 
-        metadata.update({
-            'current_branch': repo.active_branch.name,
-            'commit_count': len(list(repo.iter_commits())),
-            'last_commit': {
-                'hash': repo.head.commit.hexsha[:8],
-                'message': repo.head.commit.message.strip(),
-                'author': str(repo.head.commit.author),
-                'date': repo.head.commit.committed_datetime.isoformat()
-            },
-            'remotes': [remote.name for remote in repo.remotes],
-            'is_dirty': repo.is_dirty()
-        })
+        metadata.update(
+            {
+                "current_branch": repo.active_branch.name,
+                "commit_count": len(list(repo.iter_commits())),
+                "last_commit": {
+                    "hash": repo.head.commit.hexsha[:8],
+                    "message": repo.head.commit.message.strip(),
+                    "author": str(repo.head.commit.author),
+                    "date": repo.head.commit.committed_datetime.isoformat(),
+                },
+                "remotes": [remote.name for remote in repo.remotes],
+                "is_dirty": repo.is_dirty(),
+            }
+        )
 
         # Get remote URL if available
         if repo.remotes:
             try:
-                metadata['remote_url'] = repo.remotes.origin.url
+                metadata["remote_url"] = repo.remotes.origin.url
             except (AttributeError, IndexError):
                 pass
 
@@ -545,22 +678,27 @@ def get_repo_metadata(repo_path: str) -> Dict[str, Any]:
             import subprocess
 
             # Get current branch
-            result = subprocess.run(['git', 'branch', '--show-current'],
-                                  cwd=repo_path, capture_output=True, text=True)
+            result = subprocess.run(
+                ["git", "branch", "--show-current"], cwd=repo_path, capture_output=True, text=True
+            )
             if result.returncode == 0:
-                metadata['current_branch'] = result.stdout.strip()
+                metadata["current_branch"] = result.stdout.strip()
 
             # Get last commit info
-            result = subprocess.run(['git', 'log', '-1', '--format=%H|%s|%an|%ai'],
-                                  cwd=repo_path, capture_output=True, text=True)
+            result = subprocess.run(
+                ["git", "log", "-1", "--format=%H|%s|%an|%ai"],
+                cwd=repo_path,
+                capture_output=True,
+                text=True,
+            )
             if result.returncode == 0:
-                parts = result.stdout.strip().split('|')
+                parts = result.stdout.strip().split("|")
                 if len(parts) >= 4:
-                    metadata['last_commit'] = {
-                        'hash': parts[0][:8],
-                        'message': parts[1],
-                        'author': parts[2],
-                        'date': parts[3]
+                    metadata["last_commit"] = {
+                        "hash": parts[0][:8],
+                        "message": parts[1],
+                        "author": parts[2],
+                        "date": parts[3],
                     }
         except Exception:
             pass
@@ -570,21 +708,20 @@ def get_repo_metadata(repo_path: str) -> Dict[str, Any]:
     return metadata
 
 
-def get_directory_metadata(dir_path: str) -> Dict[str, Any]:
+def get_directory_metadata(dir_path: str) -> dict[str, Any]:
     """Extract basic directory metadata."""
-    metadata = {
-        'directory_path': dir_path,
-        'is_git_repo': False
-    }
+    metadata = {"directory_path": dir_path, "is_git_repo": False}
 
     try:
         # Basic directory info
         stat = os.stat(dir_path)
-        metadata.update({
-            'directory_name': os.path.basename(dir_path),
-            'modified': stat.st_mtime,
-            'absolute_path': os.path.abspath(dir_path)
-        })
+        metadata.update(
+            {
+                "directory_name": os.path.basename(dir_path),
+                "modified": stat.st_mtime,
+                "absolute_path": os.path.abspath(dir_path),
+            }
+        )
     except OSError:
         pass
 

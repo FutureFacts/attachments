@@ -1,12 +1,11 @@
 from attachments import attach, load, present
 
+
 def test_excel_to_csv():
     """Ensure LibreOffice-based CSV extraction works and returns the expected rows."""
     xlsx = "src/attachments/data/test_workbook.xlsx"
 
-    att = (attach(f"{xlsx}[format:csv]")
-           | load.excel_to_libreoffice
-           | present.csv)
+    att = attach(f"{xlsx}[format:csv]") | load.excel_to_libreoffice | present.csv
 
     csv_text = str(att)
 

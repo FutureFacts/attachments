@@ -28,7 +28,6 @@ from __future__ import annotations
 import os
 import re
 import sys
-from typing import Dict, List, Tuple, Union
 
 import typer
 
@@ -53,12 +52,12 @@ def _resolve_path(path: str) -> str:
     str
         Resolved path
     """
-    if path == '.' or path == "./":
+    if path == "." or path == "./":
         return os.getcwd()
     return path
 
 
-def _extract_dsl_from_path(path: str) -> Tuple[str, str]:
+def _extract_dsl_from_path(path: str) -> tuple[str, str]:
     """
     Extract DSL notation from a path if present.
 
@@ -72,13 +71,13 @@ def _extract_dsl_from_path(path: str) -> Tuple[str, str]:
     'file.pdf' → ('file.pdf', '')
     """
     # Find the first [ that starts a DSL fragment
-    match = re.search(r'^([^\[]+)(\[.+\])$', path)
+    match = re.search(r"^([^\[]+)(\[.+\])$", path)
     if match:
         return match.group(1), match.group(2)
-    return path, ''
+    return path, ""
 
 
-def _parse_mixed_args(args: List[str]) -> Tuple[List[str], Dict[str, Union[str, List[str]]]]:
+def _parse_mixed_args(args: list[str]) -> tuple[list[str], dict[str, str | list[str]]]:
     """
     Parse a mixed list of paths and flags, extracting them separately.
 
@@ -92,40 +91,40 @@ def _parse_mixed_args(args: List[str]) -> Tuple[List[str], Dict[str, Union[str, 
     (paths, flag_dict)
     """
     paths = []
-    flags: Dict[str, Union[str, List[str]]] = {}
+    flags: dict[str, str | list[str]] = {}
 
     i = 0
     while i < len(args):
         arg = args[i]
 
         # Check if it's a flag (starts with - or --)
-        if arg.startswith('-'):
+        if arg.startswith("-"):
             # Extract flag name
-            flag_name = arg.lstrip('-')
+            flag_name = arg.lstrip("-")
 
             # Handle different flag formats
-            if '=' in flag_name:
+            if "=" in flag_name:
                 # Format: --key=value
-                key, value = flag_name.split('=', 1)
+                key, value = flag_name.split("=", 1)
                 _add_flag_value(flags, key, value)
-            elif flag_name in ['c', 'y', 'copy', 'v', 'verbose', 'f', 'files', 'clipboard']:
+            elif flag_name in ["c", "y", "copy", "v", "verbose", "f", "files", "clipboard"]:
                 # Boolean flags
-                if flag_name in ['c', 'y', 'clipboard', 'copy']:
-                    flags['copy'] = 'true'
-                elif flag_name in ['v', 'verbose']:
-                    flags['verbose'] = 'true'
-                elif flag_name in ['f', 'files']:
-                    flags['files'] = 'true'
+                if flag_name in ["c", "y", "clipboard", "copy"]:
+                    flags["copy"] = "true"
+                elif flag_name in ["v", "verbose"]:
+                    flags["verbose"] = "true"
+                elif flag_name in ["f", "files"]:
+                    flags["files"] = "true"
                 else:
-                    flags[flag_name] = 'true'
-            elif i + 1 < len(args) and not args[i + 1].startswith('-'):
+                    flags[flag_name] = "true"
+            elif i + 1 < len(args) and not args[i + 1].startswith("-"):
                 # Format: --key value
                 value = args[i + 1]
                 i += 1  # Skip the value in next iteration
                 _add_flag_value(flags, flag_name, value)
             else:
                 # Flag without value
-                flags[flag_name] = 'true'
+                flags[flag_name] = "true"
         else:
             # It's a path
             paths.append(arg)
@@ -135,13 +134,13 @@ def _parse_mixed_args(args: List[str]) -> Tuple[List[str], Dict[str, Union[str, 
     return paths, flags
 
 
-def _add_flag_value(flags: Dict[str, Union[str, List[str]]], key: str, value: str) -> None:
+def _add_flag_value(flags: dict[str, str | list[str]], key: str, value: str) -> None:
     """
     Add a flag value to the flags dictionary, handling repeated keys properly.
     """
     # Handle comma-separated values in a single argument
-    if ',' in value:
-        values = [v.strip() for v in value.split(',')]
+    if "," in value:
+        values = [v.strip() for v in value.split(",")]
         if key in flags:
             if isinstance(flags[key], list):
                 flags[key].extend(values)
@@ -160,8 +159,7 @@ def _add_flag_value(flags: Dict[str, Union[str, List[str]]], key: str, value: st
             flags[key] = value
 
 
-def _build_dsl_from_flags(flags: Dict[str, Union[str, List[str]]],
-                         exclude_keys: set[str] = None) -> str:
+def _build_dsl_from_flags(flags: dict[str, str | list[str]], exclude_keys: set[str] = None) -> str:
     """
     Convert flag dictionary to DSL fragment string.
 
@@ -178,7 +176,7 @@ def _build_dsl_from_flags(flags: Dict[str, Union[str, List[str]]],
         DSL fragment like '[pages:1-4][lang:en]'
     """
     if exclude_keys is None:
-        exclude_keys = {'c','y', 'f', 'help', 'h', 'copy', 'verbose', 'clipboard'}
+        exclude_keys = {"c", "y", "f", "help", "h", "copy", "verbose", "clipboard"}
 
     dsl_parts = []
     for key, value in flags.items():
@@ -191,7 +189,7 @@ def _build_dsl_from_flags(flags: Dict[str, Union[str, List[str]]],
         else:
             dsl_parts.append(f"[{key}:{value}]")
 
-    return ''.join(dsl_parts)
+    return "".join(dsl_parts)
 
 
 def _show_help():
@@ -203,7 +201,7 @@ def _show_help():
         "  Tree view of current directory:\n"
         "    ❯ att .\n\n"
         "  Copy directory tree with prompt:\n"
-        "    ❯ att . -c --prompt \"Which file should I look at?\"\n\n"
+        '    ❯ att . -c --prompt "Which file should I look at?"\n\n'
         "  Extract specific pages (two ways):\n"
         "    ❯ att report.pdf --pages 1-4\n"
         "    ❯ att report.pdf[pages:1-4]\n\n"
@@ -217,7 +215,7 @@ def _show_help():
         "  -c, -y, --copy, --clipboard     Copy result to clipboard\n"
         "  -v, --verbose                   Enable debug output\n"
         "  -f, --files                     Force directory expansion\n"
-        "  --prompt \"...\"                  Add prompt when copying\n"
+        '  --prompt "..."                  Add prompt when copying\n'
         "  --help                          Show this help message\n\n"
         "\n🎯  DSL Reference\n"
         "═══════════════\n\n"
@@ -251,26 +249,26 @@ def app() -> None:
     args = sys.argv[1:]
 
     # Show help if no arguments or help flag
-    if not args or any(arg in ['--help', '-h', 'help'] for arg in args):
+    if not args or any(arg in ["--help", "-h", "help"] for arg in args):
         _show_help()
         sys.exit(0)
 
     # Parse mixed arguments
     paths, flags = _parse_mixed_args(args)
-    
+
     # Show what we're processing in a subtle, appealing way
-    path_display = ', '.join(paths[:2]) + ("..." if len(paths) > 2 else "")
+    path_display = ", ".join(paths[:2]) + ("..." if len(paths) > 2 else "")
     typer.secho(f"🔍 {path_display}", fg=typer.colors.BRIGHT_BLACK, dim=True)
-    
+
     # Show non-control DSL flags if any
-    dsl_flags = {k: v for k, v in flags.items() if k not in {'copy', 'verbose', 'files'}}
+    dsl_flags = {k: v for k, v in flags.items() if k not in {"copy", "verbose", "files"}}
     if dsl_flags:
-        flag_display = " ".join([f"{k}:{v}" if v != 'true' else k for k, v in dsl_flags.items()])
+        flag_display = " ".join([f"{k}:{v}" if v != "true" else k for k, v in dsl_flags.items()])
         typer.secho(f"⚙️  {flag_display}", fg=typer.colors.BRIGHT_BLACK, dim=True)
-    
+
     # Extract control flags
-    verbose = flags.get('verbose', 'false') == 'true'
-    copy = flags.get('copy', 'false') == 'true'
+    verbose = flags.get("verbose", "false") == "true"
+    copy = flags.get("copy", "false") == "true"
 
     # Set verbosity
     set_verbose(verbose)
@@ -295,7 +293,7 @@ def app() -> None:
         typer.echo("\n📖 For help: att --help")
         sys.exit(1)
 
-    if 'prompt' in flags.keys() and not copy:
+    if "prompt" in flags.keys() and not copy:
         typer.secho("❌  Error: Prompt without copy is ignored", fg=typer.colors.RED, err=True)
 
     try:
@@ -303,7 +301,7 @@ def app() -> None:
 
         if copy:
             # Copy to clipboard with optional prompt
-            result.to_clipboard_text(flags.get('prompt', ''))
+            result.to_clipboard_text(flags.get("prompt", ""))
             # The clipboard function already prints a message, so we don't need to print again
         else:
             # Output to terminal
@@ -314,14 +312,14 @@ def app() -> None:
 
         # Provide helpful suggestions based on common errors
         error_msg = str(exc).lower()
-        if 'no such file' in error_msg or 'not found' in error_msg:
+        if "no such file" in error_msg or "not found" in error_msg:
             typer.echo("\n💡 Tip: Check that the file path is correct")
             typer.echo("        Use '.' for current directory")
-        elif 'invalid dsl' in error_msg or 'invalid syntax' in error_msg:
+        elif "invalid dsl" in error_msg or "invalid syntax" in error_msg:
             typer.echo("\n💡 Tip: Check DSL syntax")
             typer.echo("        ✓ Correct: [pages:1-4]")
             typer.echo("        ✗ Wrong:   [pages: 1-4] (no spaces)")
-        elif 'permission' in error_msg:
+        elif "permission" in error_msg:
             typer.echo("\n💡 Tip: Check file permissions")
 
         sys.exit(1)

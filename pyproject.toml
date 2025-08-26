@@ -79,6 +79,7 @@ dev = [
     "sphinx>=7.0.0",
     "sphinx-autodoc2>=0.5.0",
     "ipykernel>=6.29.5",       # For Jupyter notebook execution
+    "dspy-ai>=2.6.24",         # For testing dspy integration
 ]
 
 
