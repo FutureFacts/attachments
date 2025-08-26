@@ -276,6 +276,7 @@ ignore = [
     "F821",  # Undefined name (for type hints in quotes)
     "B007",  # Loop control variable not used (sometimes needed)
     "E402",  # Module level import not at top (needed for conditional imports in tests)
+    "E501",  # Line too long (handled by Black)
     "UP038", # Use X | Y in isinstance (backwards compatibility)
 ]
 exclude = [".venv", "_build", "build", "dist"]

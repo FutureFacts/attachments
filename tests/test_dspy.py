@@ -4,9 +4,8 @@ import os
 import pytest
 
 # Skip entire module if no API key is available
-pytestmark = pytest.mark.skipif(
-    not os.environ.get("OPENAI_API_KEY"), reason="DSPy tests require OPENAI_API_KEY"
-)
+if not os.environ.get("OPENAI_API_KEY"):
+    pytest.skip("DSPy tests require OPENAI_API_KEY", allow_module_level=True)
 
 import dspy
 from attachments.data import get_sample_path
