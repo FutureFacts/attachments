@@ -271,5 +271,11 @@ select = [
     "UP",  # pyupgrade
     "I",   # isort (import sorting)
 ]
-ignore = []
+ignore = [
+    "F811",  # Redefinition of unused variable (needed for multiple dispatch)
+    "F821",  # Undefined name (for type hints in quotes)
+    "B007",  # Loop control variable not used (sometimes needed)
+    "E402",  # Module level import not at top (needed for conditional imports in tests)
+    "UP038", # Use X | Y in isinstance (backwards compatibility)
+]
 exclude = [".venv", "_build", "build", "dist"]

@@ -1,4 +1,13 @@
 # %%
+import os
+
+import pytest
+
+# Skip entire module if no API key is available
+pytestmark = pytest.mark.skipif(
+    not os.environ.get("OPENAI_API_KEY"), reason="DSPy tests require OPENAI_API_KEY"
+)
+
 import dspy
 from attachments.data import get_sample_path
 from attachments.dspy import Attachments
