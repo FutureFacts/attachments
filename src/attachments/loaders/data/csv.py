@@ -22,6 +22,8 @@ def csv_to_pandas(att: Attachment) -> Attachment:
             # Fallback for direct file path
             att._obj = pd.read_csv(att.path)
 
-    except ImportError:
-        raise ImportError("pandas is required for CSV loading. Install with: pip install pandas")
+    except ImportError as err:
+        raise ImportError(
+            "pandas is required for CSV loading. Install with: pip install pandas"
+        ) from err
     return att

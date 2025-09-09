@@ -51,7 +51,7 @@ def git_repo_to_structure(att: Attachment) -> Attachment:
 
         # Walk directory to calculate total size without loading files into memory
         # Count ALL files, not just processable ones, to prevent memory issues
-        for root, dirs, filenames in os.walk(repo_path):
+        for root, _dirs, filenames in os.walk(repo_path):
             # DON'T filter directories during size check - we need to count everything
             # dirs[:] = [d for d in dirs if not should_ignore(os.path.join(root, d), repo_path, ignore_patterns)]
 

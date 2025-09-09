@@ -106,8 +106,7 @@ def images(att: Attachment, doc: "docx.Document") -> Attachment:
                         str(docx_path_obj),
                     ],
                     check=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
+                    capture_output=True,
                     timeout=60,  # 60 second timeout
                 )
 
@@ -399,8 +398,7 @@ def images(att: Attachment, pres: "pptx.Presentation") -> Attachment:
                         str(pptx_path_obj),
                     ],
                     check=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
+                    capture_output=True,
                     timeout=60,  # 60 second timeout
                 )
 
@@ -551,8 +549,7 @@ def images(att: Attachment, workbook: "openpyxl.Workbook") -> Attachment:
                         str(excel_path_obj),
                     ],
                     check=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
+                    capture_output=True,
                     timeout=60,  # 60 second timeout
                 )
 
@@ -744,7 +741,7 @@ def images(att: Attachment, svg_doc: "SVGDocument") -> Attachment:
                     # Handle async execution properly
                     try:
                         # Check if we're already in an event loop
-                        loop = asyncio.get_running_loop()
+                        asyncio.get_running_loop()
                         # We're in an event loop, use nest_asyncio or thread
                         try:
                             import nest_asyncio
@@ -754,7 +751,6 @@ def images(att: Attachment, svg_doc: "SVGDocument") -> Attachment:
                         except ImportError:
                             # nest_asyncio not available, use thread approach
                             import concurrent.futures
-                            import threading
 
                             def run_in_thread():
                                 new_loop = asyncio.new_event_loop()
@@ -904,14 +900,23 @@ def images(att: Attachment, svg_doc: "SVGDocument") -> Attachment:
                 return att
 
             except ImportError:
-                # No SVG rendering libraries available
+                # No SVG rendering libraries available — embed raw SVG as a data URL fallback
                 error_msg = (
-                    "SVG rendering not available. Install cairosvg or wand for SVG to PNG conversion:\n"
+                    "SVG rasterizer not available. Installed fallback: embedded SVG as data URL.\n"
+                    "Install a rasterizer for PNG output:\n"
                     "  pip install cairosvg  # Recommended\n"
                     "  # OR\n"
                     "  pip install Wand  # Requires ImageMagick system installation"
                 )
                 att.metadata["svg_images_error"] = error_msg
+
+                # Always ensure at least one image entry for SVGs
+                try:
+                    b64_svg = base64.b64encode(svg_content.encode("utf-8")).decode("ascii")
+                    att.images.append(f"data:image/svg+xml;base64,{b64_svg}")
+                except Exception:
+                    # If encoding fails, still surface the warning
+                    pass
 
                 # Add visible warning to text output so users see it
                 warning = f"\n\n⚠️  **SVG Image Rendering Not Available**\n{error_msg}\n"
@@ -931,7 +936,7 @@ def images(att: Attachment, soup: "bs4.BeautifulSoup") -> Attachment:
     # First check if Playwright is available
     try:
         from playwright.async_api import async_playwright
-    except ImportError:
+    except ImportError as err:
         # Check if CSS selector was requested (which requires Playwright for highlighting)
         css_selector = att.commands.get("select")
         if css_selector:
@@ -955,12 +960,12 @@ def images(att: Attachment, soup: "bs4.BeautifulSoup") -> Attachment:
                 f"  🎨 Professional styling with glowing borders and badges\n"
                 f"  🔍 Perfect for extracting specific page elements"
             )
-            raise ImportError(error_msg)
+            raise ImportError(error_msg) from err
         else:
             # Regular screenshot was requested
             raise ImportError(
                 "Playwright not available. Install with: pip install playwright && playwright install chromium"
-            )
+            ) from err
 
     try:
         import asyncio
@@ -1175,7 +1180,7 @@ def images(att: Attachment, soup: "bs4.BeautifulSoup") -> Attachment:
         try:
             # Check if we're already in an event loop (like in Jupyter)
             try:
-                loop = asyncio.get_running_loop()
+                asyncio.get_running_loop()
                 # We're in an event loop (Jupyter), use nest_asyncio or create_task
                 try:
                     import nest_asyncio

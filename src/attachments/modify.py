@@ -152,8 +152,8 @@ def crop(att: Attachment, img: "PIL.Image.Image") -> Attachment:
     if isinstance(box, str):
         try:
             box = [int(x) for x in box.split(",")]
-        except Exception:
-            raise ValueError(f"Invalid crop box format: {att.commands['crop']!r}")
+        except Exception as e:
+            raise ValueError(f"Invalid crop box format: {att.commands['crop']!r}") from e
     if not (isinstance(box, (list, tuple)) and len(box) == 4):
         raise ValueError(f"Crop box must be 4 values (x1,y1,x2,y2), got: {box!r}")
     x1, y1, x2, y2 = box
@@ -396,7 +396,7 @@ def morph_to_detected_type(att: Attachment, response: "requests.Response") -> At
 
     # Preserve original URL for display purposes
     original_url = att.metadata.get("original_url", att.path)
-    parsed_url = urlparse(original_url)
+    urlparse(original_url)
 
     # Keep the original URL as the path for display, but also save it in metadata
     att.path = original_url

@@ -436,10 +436,12 @@ def tile_images(input_obj: Union[Attachment, "AttachmentCollection"]) -> Attachm
 
         return result
 
-    except ImportError:
-        raise ImportError("Pillow is required for image tiling. Install with: pip install Pillow")
+    except ImportError as err:
+        raise ImportError(
+            "Pillow is required for image tiling. Install with: pip install Pillow"
+        ) from err
     except Exception as e:
-        raise ValueError(f"Could not tile images: {e}")
+        raise ValueError(f"Could not tile images: {e}") from e
 
 
 @refiner
@@ -466,6 +468,11 @@ def resize_images(att: Attachment) -> Attachment:
                 # Handle both data URLs and raw base64
                 if img_b64.startswith("data:image/"):
                     # Extract base64 data from data URL
+                    # Skip SVGs: keep as-is without resizing
+                    if img_b64.startswith("data:image/svg+xml;base64,"):
+                        resized_images_b64.append(img_b64)
+                        continue
+
                     img_data_b64 = img_b64.split(",", 1)[1]
                 else:
                     # Raw base64 data
@@ -549,10 +556,12 @@ def resize_images(att: Attachment) -> Attachment:
 
         return att
 
-    except ImportError:
-        raise ImportError("Pillow is required for image resizing. Install with: pip install Pillow")
+    except ImportError as err:
+        raise ImportError(
+            "Pillow is required for image resizing. Install with: pip install Pillow"
+        ) from err
     except Exception as e:
-        raise ValueError(f"Could not resize images: {e}")
+        raise ValueError(f"Could not resize images: {e}") from e
 
 
 @refiner
@@ -569,7 +578,7 @@ def add_repo_headers(att: Attachment) -> Attachment:
 
     # Check if this is from a repository
     if att.metadata.get("from_repo"):
-        repo_path = att.metadata.get("repo_path", "")
+        repo_path = att.metadata.get("repo_path", "")  # noqa: F841
         rel_path = att.metadata.get("relative_path", att.path)
 
         # Detect file type/language

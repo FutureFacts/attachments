@@ -14,11 +14,11 @@ def ipynb_loader(att: Attachment) -> Attachment:
     """Loads and parses an IPYNB file."""
     try:
         import nbformat
-    except ImportError:
+    except ImportError as err:
         raise ImportError(
             "nbformat is required for Jupyter notebook processing.\n"
             "Install with: pip install nbformat"
-        )
+        ) from err
 
     with open(att.input_source, encoding="utf-8") as f:
         notebook = nbformat.read(f, as_version=4)
@@ -30,10 +30,20 @@ from attachments.core import presenter
 
 
 @presenter
-def ipynb_text_presenter(att: Attachment, notebook) -> Attachment:
-    """Presents the IPYNB content as text."""
+def ipynb_text_presenter(att: Attachment, notebook: object | None = None) -> Attachment:
+    """Presents the IPYNB content as text.
+
+    Accepts the parsed notebook as second arg; if omitted, uses att._obj.
+    """
+    if notebook is None:
+        notebook = getattr(att, "_obj", None)
+    if notebook is None:
+        # Nothing to present
+        att.text = att.text or ""
+        return att
+
     full_content_blocks = []
-    for cell in notebook.cells:
+    for cell in getattr(notebook, "cells", []) or []:
         cell_block_parts = []
         if cell.cell_type == "markdown":
             cell_block_parts.append(cell.source)
@@ -63,12 +73,13 @@ def ipynb_text_presenter(att: Attachment, notebook) -> Attachment:
     return att
 
 
-from attachments import load, present
 from attachments.pipelines import processor
 
 
 @processor(match=ipynb_match, description="A processor for IPYNB (Jupyter Notebook) files.")
 def ipynb_to_llm(att: Attachment) -> Attachment:
     """Processes an IPYNB file into an LLM-friendly text format."""
+    # Import namespaces at call time to ensure SmartVerbNamespace is used
+    from .. import load, present
 
     return att | load.ipynb_loader | present.ipynb_text_presenter

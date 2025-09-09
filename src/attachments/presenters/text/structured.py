@@ -28,8 +28,7 @@ def csv(att: Attachment, doc: LibreOfficeDocument) -> Attachment:
             subprocess.run(
                 [soffice, "--headless", "--convert-to", "csv", "--outdir", temp_dir, source_path],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 timeout=60,
             )
 

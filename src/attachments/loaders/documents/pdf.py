@@ -15,7 +15,6 @@ def pdf_to_pdfplumber(att: Attachment) -> Attachment:
 
         # Try to create a temporary PDF with CropBox defined to silence warnings
         try:
-            import os
             import tempfile
             from io import BytesIO
 
@@ -62,8 +61,8 @@ def pdf_to_pdfplumber(att: Attachment) -> Attachment:
                 pdf_source.seek(0)
                 att._obj = pdfplumber.open(pdf_source)
 
-    except ImportError:
+    except ImportError as err:
         raise ImportError(
             "pdfplumber is required for PDF loading. Install with: pip install pdfplumber"
-        )
+        ) from err
     return att

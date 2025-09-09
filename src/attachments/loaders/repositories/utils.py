@@ -508,7 +508,7 @@ def get_directory_structure(
     # But if only_dirs_with_files is True, we skip this step
     if include_all_dirs and not only_dirs_with_files:
         try:
-            for root, dirs, filenames in os.walk(base_path):
+            for root, dirs, _filenames in os.walk(base_path):
                 # Filter out ignored directories during walk
                 dirs[:] = [
                     d

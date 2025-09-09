@@ -124,6 +124,31 @@ Run tests using:
 uv run pytest
 ```
 
+## Pre-commit Hooks
+
+We use pre-commit to enforce formatting, linting, and run a fast test pass before commits.
+
+What runs:
+- Black: formats Python code.
+- Ruff: lints and auto-fixes common issues (exits non‑zero when it fixes files).
+- Pytest: runs a quick test run (`--maxfail=1 -q`).
+
+Set up locally:
+```bash
+uv tool install pre-commit  # or: pip install pre-commit
+pre-commit install          # install git hook in .git/hooks
+
+# Optional: run on the whole repo
+pre-commit run --all-files
+```
+
+Tips:
+- If Ruff reports “Found N errors (N fixed, 0 remaining)”, re-run pre-commit so the next hook sees the updated files.
+- Our configuration lives in `.pre-commit-config.yaml`. Black excludes `docs/scripts/how_splitting_works.py` because it contains fenced blocks that are intentionally kept for docs generation.
+- Ruff rules and per‑file‑ignores are configured in `pyproject.toml` under `[tool.ruff]`.
+
+CI runs the same hooks, so keeping your local hooks up to date helps ensure green PRs.
+
 ## Releasing a New Version (Publishing to PyPI)
 
 This project uses GitHub Actions to automate building and publishing the package to PyPI when a new version tag is pushed.

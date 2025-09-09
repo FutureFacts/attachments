@@ -436,14 +436,14 @@ def to_clipboard_text(input_obj: Attachment | AttachmentCollection, prompt: str 
         else:
             print(f"📋 Text (length: {len(final_content)}) copied to clipboard.")
 
-    except ImportError:
+    except ImportError as err:
         raise ImportError(
             "Clipboard adapters require 'copykitten' to be installed.\n\n"
             "Install with:\n"
             "  pip install copykitten\n"
             "  # or\n"
             "  uv add copykitten"
-        )
+        ) from err
     except Exception as e:
         print(f"⚠️ Could not copy text to clipboard: {e}")
 
@@ -485,13 +485,13 @@ def to_clipboard_image(input_obj: Attachment | AttachmentCollection) -> None:
         copykitten.copy_image(pixels, img.width, img.height)
         print(f"📋 Image ({img.width}x{img.height}) copied to clipboard.")
 
-    except ImportError:
+    except ImportError as err:
         raise ImportError(
             "Clipboard adapters require 'copykitten' and 'Pillow' to be installed.\n\n"
             "Install with:\n"
             "  pip install copykitten Pillow\n"
             "  # or\n"
             "  uv add copykitten Pillow"
-        )
+        ) from err
     except Exception as e:
         print(f"⚠️ Could not copy image to clipboard: {e}")

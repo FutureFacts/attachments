@@ -51,9 +51,9 @@ def zip_to_images(att: Attachment) -> "AttachmentCollection":
 
         return AttachmentCollection(attachments)
 
-    except ImportError:
+    except ImportError as err:
         raise ImportError(
             "Pillow is required for image processing. Install with: pip install Pillow"
-        )
+        ) from err
     except Exception as e:
-        raise ValueError(f"Could not load ZIP file: {e}")
+        raise ValueError(f"Could not load ZIP file: {e}") from e

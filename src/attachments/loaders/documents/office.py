@@ -15,10 +15,10 @@ def pptx_to_python_pptx(att: Attachment) -> Attachment:
         # Use the new input_source property - no more repetitive patterns!
         att._obj = Presentation(att.input_source)
 
-    except ImportError:
+    except ImportError as err:
         raise ImportError(
             "python-pptx is required for PowerPoint loading. Install with: pip install python-pptx"
-        )
+        ) from err
     return att
 
 
@@ -31,10 +31,10 @@ def docx_to_python_docx(att: Attachment) -> Attachment:
         # Use the new input_source property - no more repetitive patterns!
         att._obj = Document(att.input_source)
 
-    except ImportError:
+    except ImportError as err:
         raise ImportError(
             "python-docx is required for Word document loading. Install with: pip install python-docx"
-        )
+        ) from err
     return att
 
 
@@ -47,10 +47,10 @@ def excel_to_openpyxl(att: Attachment) -> Attachment:
         # Use the new input_source property - no more repetitive patterns!
         att._obj = load_workbook(att.input_source, read_only=True)
 
-    except ImportError:
+    except ImportError as err:
         raise ImportError(
             "openpyxl is required for Excel loading. Install with: pip install openpyxl"
-        )
+        ) from err
     return att
 
 

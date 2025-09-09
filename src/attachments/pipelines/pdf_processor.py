@@ -80,8 +80,9 @@ def pdf_to_llm(att: Attachment) -> Attachment:
     if include_images:
         image_pipeline = present.images
     else:
-        # Empty pipeline that does nothing
-        image_pipeline = lambda att: att
+        # Empty pipeline that does nothing (avoid lambda for lint rules)
+        def image_pipeline(att: Attachment) -> Attachment:  # noqa: D401
+            return att
 
     # Get OCR setting from DSL commands
     ocr_setting = att.commands.get("ocr", "auto").lower()
@@ -94,7 +95,8 @@ def pdf_to_llm(att: Attachment) -> Attachment:
             | modify.morph_to_detected_type  # Smart detection replaces hardcoded url_to_file
             | load.pdf_to_pdfplumber
             | modify.pages  # Optional - only acts if [pages:...] present
-            | text_presenter + image_pipeline + present.ocr + present.metadata  # Include OCR
+            # Only run OCR for text (avoid duplicate text from standard presenter)
+            | image_pipeline + _perform_inline_ocr + present.metadata
             | refine.tile_images
             | refine.resize_images
         )
@@ -128,7 +130,167 @@ def pdf_to_llm(att: Attachment) -> Attachment:
         if processed.metadata.get("is_likely_scanned", False) and processed.metadata.get(
             "text_extraction_quality"
         ) in ["poor", "limited"]:
-            # Add OCR for scanned documents
-            processed = processed | present.ocr
+            # Add OCR for scanned documents (inline)
+            processed = processed | _perform_inline_ocr
 
         return processed
+
+
+def _perform_inline_ocr(att: Attachment) -> Attachment:
+    """Inline OCR extraction using pytesseract/pypdfium2, driven by DSL.
+
+    - Honors `lang` command (e.g., [lang:chi_sim]).
+    - Respects `pages` selection via `modify.pages` metadata.
+    - Appends an OCR section to `att.text` and updates metadata.
+    """
+    try:
+        import pypdfium2 as pdfium
+        import pytesseract
+        from PIL import Image  # noqa: F401 - imported for side effects/types
+    except ImportError as e:
+        att.text += "\n## OCR Text Extraction\n\n"
+        att.text += "⚠️ OCR not available: Missing dependencies.\n\n"
+        att.text += "Install with:\n"
+        att.text += "```bash\n"
+        att.text += "pip install pytesseract pypdfium2 pillow\n"
+        att.text += "# Ubuntu/Debian (engine + languages)\n"
+        att.text += "sudo apt-get install tesseract-ocr\n"
+        att.text += "# Example languages: Chinese Simplified\n"
+        att.text += "sudo apt-get install tesseract-ocr-chi-sim\n"
+        att.text += "# macOS:\n"
+        att.text += "brew install tesseract\n"
+        att.text += "```\n\n"
+        att.text += f"Error: {e}\n\n"
+        att.metadata["ocr_error"] = str(e)
+        # Log a warning for developers
+        try:
+            from ..config import verbose_log
+
+            verbose_log(f"OCR unavailable due to missing deps: {e}")
+        except Exception:
+            pass
+        return att
+
+    att.text += "\n## OCR Text Extraction\n\n"
+
+    try:
+        # Verify tesseract binary is available
+        try:
+            import pytesseract
+
+            _ = pytesseract.get_tesseract_version()
+        except Exception as e:
+            msg = (
+                "⚠️ Tesseract engine not found. Please install the tesseract binary.\n\n"
+                "Install suggestions:\n\n"
+                "- Ubuntu/Debian: sudo apt-get install tesseract-ocr\n"
+                "- macOS (Homebrew): brew install tesseract\n"
+                "- Windows: Install from https://github.com/tesseract-ocr/tesseract\n\n"
+                "You can also set pytesseract.pytesseract.tesseract_cmd to the binary path.\n\n"
+            )
+            att.text += msg
+            att.metadata["ocr_error"] = f"tesseract_not_found: {e}"
+            try:
+                from ..config import verbose_log
+
+                verbose_log(f"Tesseract not found: {e}")
+            except Exception:
+                pass
+            return att
+
+        # Load bytes for pypdfium2 rendering
+        if "temp_pdf_path" in att.metadata:
+            with open(att.metadata["temp_pdf_path"], "rb") as f:
+                pdf_bytes = f.read()
+        elif att.path:
+            with open(att.path, "rb") as f:
+                pdf_bytes = f.read()
+        else:
+            att.text += "⚠️ OCR failed: Cannot access PDF file.\n\n"
+            return att
+
+        pdf_doc = pdfium.PdfDocument(pdf_bytes)
+        num_pages = len(pdf_doc)
+
+        # Page selection (defaults to first 5 for performance)
+        if "selected_pages" in att.metadata:
+            pages_to_process = att.metadata["selected_pages"]
+        else:
+            pages_to_process = range(1, min(6, num_pages + 1))
+        pages_list = list(pages_to_process)
+
+        # Language selection via DSL (default English)
+        ocr_lang = att.commands.get("lang", "eng")
+
+        total_ocr_text = ""
+        successful_pages = 0
+
+        for page_num in pages_list:
+            if 1 <= page_num <= num_pages:
+                try:
+                    page = pdf_doc[page_num - 1]
+                    pil_image = page.render(scale=2).to_pil()  # upscale for better OCR
+                    try:
+                        page_text = pytesseract.image_to_string(pil_image, lang=ocr_lang)
+                    except pytesseract.TesseractError as te:
+                        # Handle missing language data and other tesseract errors gracefully
+                        err = str(te)
+                        guidance = ""
+                        if any(
+                            x in err.lower()
+                            for x in ["unknown language", "failed loading language", "not found"]
+                        ):
+                            guidance = (
+                                "\n💡 Language data not found. Install traineddata for the requested language.\n\n"
+                                "Examples:\n"
+                                "- Ubuntu/Debian Chinese (Simplified): sudo apt-get install tesseract-ocr-chi-sim\n"
+                                "- Ubuntu/Debian Arabic: sudo apt-get install tesseract-ocr-ara\n"
+                                "- macOS: brew install tesseract (includes common languages) or add .traineddata to TESSDATA_PREFIX\n\n"
+                            )
+                        att.text += (
+                            f"### Page {page_num} (OCR)\n\n*['tesseract' error: {err}]*\n"
+                            + guidance
+                            + "\n"
+                        )
+                        # Continue to next page
+                        continue
+
+                    if page_text.strip():
+                        att.text += f"### Page {page_num} (OCR)\n\n{page_text.strip()}\n\n"
+                        total_ocr_text += page_text.strip()
+                        successful_pages += 1
+                    else:
+                        att.text += f"### Page {page_num} (OCR)\n\n*[No text detected by OCR]*\n\n"
+                except Exception as e:
+                    att.text += f"### Page {page_num} (OCR)\n\n*[OCR failed: {str(e)}]*\n\n"
+
+        pdf_doc.close()
+
+        # Summary and metadata
+        att.text += "**OCR Summary**:\n"
+        att.text += f"- Pages processed: {len(pages_list)}\n"
+        att.text += f"- Language: {ocr_lang}\n"
+        att.text += f"- Pages with OCR text: {successful_pages}\n"
+        att.text += f"- Total OCR text length: {len(total_ocr_text)} characters\n\n"
+
+        att.metadata.update(
+            {
+                "ocr_performed": True,
+                "ocr_pages_processed": len(pages_list),
+                "ocr_lang": ocr_lang,
+                "ocr_pages_successful": successful_pages,
+                "ocr_text_length": len(total_ocr_text),
+            }
+        )
+
+    except Exception as e:
+        att.text += f"⚠️ OCR failed: {str(e)}\n\n"
+        att.metadata["ocr_error"] = str(e)
+        try:
+            from ..config import verbose_log
+
+            verbose_log(f"OCR runtime failure: {e}")
+        except Exception:
+            pass
+
+    return att
