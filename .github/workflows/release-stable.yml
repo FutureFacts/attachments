@@ -3,7 +3,12 @@ name: Release Stable to PyPI
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+$'  # Triggers on stable tags like v0.13.0, v1.0.0 (no alpha suffix)
+      - 'v*.*.*'  # Glob match for stable tags like v0.13.0, v1.0.0 (no pre-release suffix)
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g., v0.23.1). Leave empty to use latest tag on this ref.'
+        required: false
 
 jobs:
   release-stable:
@@ -50,7 +55,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          name: "Release ${{ github.ref_name }}"
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: "Release ${{ steps.meta.outputs.tag }}"
           body: |
             🎉 **Stable Release**: Production-ready version with new features and improvements.
             
@@ -58,7 +64,7 @@ jobs:
             ```bash
             pip install attachments
             # or explicitly:
-            pip install attachments==${{ github.ref_name | replace('v', '') }}
+            pip install attachments==${{ steps.meta.outputs.version }}
             ```
             
             **What's new in this release:**
@@ -69,4 +75,14 @@ jobs:
             
             See [CHANGELOG.md](https://github.com/MaximeRivest/attachments/blob/main/CHANGELOG.md) for full details.
           prerelease: false
+      - name: Compute release metadata
+        id: meta
+        run: |
+          TAG="${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}"
+          if [ -z "$TAG" ]; then
+            # Fallback to latest tag reachable from this commit
+            TAG="$(git describe --tags --abbrev=0)"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
           files: dist/* 
