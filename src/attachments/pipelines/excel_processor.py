@@ -97,7 +97,8 @@ def excel_to_llm(att: Attachment) -> Attachment:
         image_pipeline = present.images
     else:
         # Empty pipeline that does nothing
-        image_pipeline = lambda att: att
+        def image_pipeline(att: Attachment) -> Attachment:  # noqa: D401
+            return att
 
     # Build the complete pipeline
     return (

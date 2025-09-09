@@ -115,6 +115,8 @@ ctx = Attachments(
 
 print(str(ctx))      # Pretty text view  
 print(len(ctx.images))  # Number of extracted images
+
+r'''
 ```
 
 ### Advanced usage with DSL
@@ -129,3 +131,4 @@ a = Attachments(
 print(a)           # pretty text view
 len(a.images)      # 👉 base64 PNG list
 ```
+'''

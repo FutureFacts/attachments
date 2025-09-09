@@ -108,7 +108,7 @@ def markdown(att: Attachment, pres: "pptx.Presentation") -> Attachment:
     try:
         slide_indices = att.metadata.get("selected_slides", range(len(pres.slides)))
 
-        for i, slide_idx in enumerate(slide_indices):
+        for _i, slide_idx in enumerate(slide_indices):
             if 0 <= slide_idx < len(pres.slides):
                 slide = pres.slides[slide_idx]
                 att.text += f"## Slide {slide_idx + 1}\n\n"

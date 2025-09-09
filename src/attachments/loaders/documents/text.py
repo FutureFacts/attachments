@@ -37,7 +37,7 @@ def html_to_bs4(att: Attachment) -> Attachment:
         )
 
         return att
-    except ImportError:
+    except ImportError as err:
         raise ImportError(
             "beautifulsoup4 is required for HTML loading. Install with: pip install beautifulsoup4"
-        )
+        ) from err

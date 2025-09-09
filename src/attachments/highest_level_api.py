@@ -170,7 +170,7 @@ class Attachments:
 
             return splitter_func
         except Exception as e:
-            raise ValueError(f"Error getting splitter '{splitter_name}': {e}")
+            raise ValueError(f"Error getting splitter '{splitter_name}': {e}") from e
 
     def _process_files(self, paths: tuple) -> None:
         """Process all input files through universal pipeline with split support."""
@@ -616,29 +616,31 @@ def auto_attach(prompt: str, root_dir: str | list[str] = None) -> Attachments:
         if reference.startswith(("http://", "https://")):
             # For URLs, try to process directly
             try:
-                test_att = Attachment(reference)
+                _ = Attachment(reference)
                 valid_attachments.append(reference)
                 continue
             except Exception:
-                # If direct URL fails, try with root URLs
-                for root in root_dirs:
-                    if root.startswith(("http://", "https://")):
-                        # Try combining URL roots
-                        try:
-                            # Extract base filename/path from reference
-                            base_ref = reference.split("[")[0]  # Remove DSL for URL construction
-                            if not base_ref.startswith(("http://", "https://")):
-                                continue
+                # Ignore and try root URLs below
+                pass
 
-                            # Try the reference as-is first
-                            test_att = Attachment(reference)
-                            valid_attachments.append(reference)
-                            break
-                        except Exception:
+            # If direct URL fails, try with root URLs
+            for root in root_dirs:
+                if root.startswith(("http://", "https://")):
+                    # Try combining URL roots
+                    try:
+                        # Extract base filename/path from reference
+                        base_ref = reference.split("[")[0]  # Remove DSL for URL construction
+                        if not base_ref.startswith(("http://", "https://")):
                             continue
+
+                        # Try the reference as-is first
+                        _ = Attachment(reference)
+                        valid_attachments.append(reference)
+                        break
+                    except Exception:
+                        continue
         else:
             # It's a file reference - try with each root directory
-            found = False
             for root in root_dirs:
                 if root.startswith(("http://", "https://")):
                     # Skip URL roots for non-URL references - they don't make sense to combine
@@ -648,13 +650,10 @@ def auto_attach(prompt: str, root_dir: str | list[str] = None) -> Attachments:
                     file_path = os.path.join(root, reference)
                     if os.path.exists(file_path.split("[")[0]):  # Check if base file exists
                         try:
-                            test_att = Attachment(
-                                reference if os.path.isabs(reference) else file_path
-                            )
+                            _ = Attachment(reference if os.path.isabs(reference) else file_path)
                             valid_attachments.append(
                                 reference if os.path.isabs(reference) else file_path
                             )
-                            found = True
                             break
                         except Exception:
                             continue
@@ -663,20 +662,29 @@ def auto_attach(prompt: str, root_dir: str | list[str] = None) -> Attachments:
     if valid_attachments:
         attachments_obj = Attachments(*valid_attachments)
 
-        # Now the magic: prepend the original prompt to the combined text
-        original_text = str(attachments_obj)
-
         # Create a new Attachments object that combines everything
         class MagicalAttachments(Attachments):
             def __init__(self, original_prompt, base_attachments):
                 # Don't call super().__init__ to avoid reprocessing files
                 self.attachments = base_attachments.attachments.copy()
                 self._original_prompt = original_prompt
+                # Keep original processed text for fallback
                 self._base_text = str(base_attachments)
 
             def __str__(self) -> str:
-                """Return the magical combined text: prompt + file content."""
-                return f"{self._original_prompt.strip()}\n\n{self._base_text}"
+                """Return prompt + raw text content when available (no added headers)."""
+                parts = []
+                for att in self.attachments:
+                    try:
+                        # Prefer raw string objects from loader (avoid headers/formatting)
+                        if isinstance(getattr(att, "_obj", None), str) and att._obj.strip():
+                            parts.append(att._obj)
+                        else:
+                            parts.append(att.text or "")
+                    except Exception:
+                        parts.append(att.text or "")
+                combined_files = "\n\n".join(p for p in parts if p)
+                return f"{self._original_prompt.strip()}\n\n{combined_files}".rstrip() + "\n"
 
             @property
             def text(self) -> str:

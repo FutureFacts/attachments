@@ -58,24 +58,20 @@ def _check_dspy_availability():
     if _DSPY_AVAILABLE is not None:
         return _DSPY_AVAILABLE
 
-    try:
-        import dspy
-        import pydantic
+    from importlib.util import find_spec
 
+    has_dspy = find_spec("dspy") is not None
+    has_pydantic = find_spec("pydantic") is not None
+
+    if has_dspy and has_pydantic:
         _DSPY_AVAILABLE = True
         _DSPY_ERROR_MSG = None
-    except ImportError as e:
+    else:
         _DSPY_AVAILABLE = False
         missing_packages = []
-
-        try:
-            import dspy
-        except ImportError:
+        if not has_dspy:
             missing_packages.append("dspy-ai")
-
-        try:
-            import pydantic
-        except ImportError:
+        if not has_pydantic:
             missing_packages.append("pydantic")
 
         if missing_packages:
@@ -89,7 +85,7 @@ def _check_dspy_availability():
                 f"  from attachments import Attachments"
             )
         else:
-            _DSPY_ERROR_MSG = f"DSPy integration failed: {e}"
+            _DSPY_ERROR_MSG = "DSPy integration failed due to unknown import issue."
 
     return _DSPY_AVAILABLE
 
@@ -352,7 +348,8 @@ class Attachments(BaseAttachments):
             if hasattr(dspy_obj, "format") and callable(dspy_obj.format):
                 # DSPy 2.6.25+ - use the new format method
                 try:
-                    formatted_content = dspy_obj.format()
+                    # DSPy 2.6.25+ - use the new format method
+                    _ = dspy_obj.format()
                     # The BaseType's serialize_model will handle the proper wrapping
                     return dspy_obj.serialize_model()
                 except Exception:

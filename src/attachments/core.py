@@ -930,7 +930,7 @@ def presenter(func=None, *, category=None):
                         preferred_exists = False
 
                         if preferred_presenter in _presenters:
-                            for expected_type, handler_fn in _presenters[preferred_presenter]:
+                            for expected_type, _handler_fn in _presenters[preferred_presenter]:
                                 # Skip fallback handlers (None type) - they don't count as type-specific
                                 if expected_type is None:
                                     continue
@@ -1278,7 +1278,7 @@ class VerbNamespace:
             params = list(sig.parameters.values())
 
             # If second parameter is annotated as 'str', this is likely a splitter
-            is_splitter = len(params) >= 2 and params[1].annotation == str
+            is_splitter = len(params) >= 2 and params[1].annotation is str
 
             if is_splitter:
                 # For splitters, pass the text content
@@ -1288,7 +1288,7 @@ class VerbNamespace:
                 for expected_type, handler_fn in handlers:
                     if expected_type is None:
                         return handler_fn(att, content)
-                    elif expected_type == str:
+                    elif expected_type is str:
                         return handler_fn(att, content)
 
                 # Fallback to first handler

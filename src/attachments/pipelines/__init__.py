@@ -17,7 +17,7 @@ Usage:
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from ..config import dedent, indent, verbose_log
 from ..core import Attachment

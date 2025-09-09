@@ -207,7 +207,7 @@ def pages(att: Attachment, pdf: "pdfplumber.PDF") -> AttachmentCollection:
     """Split PDF into individual page attachments."""
     chunks = []
 
-    for page_num, page in enumerate(pdf.pages, 1):
+    for page_num, _page in enumerate(pdf.pages, 1):
         chunk = Attachment(f"{att.path}#page-{page_num}")
         chunk._obj = pdf  # Store original PDF object for compatibility with presenters
         chunk.commands = att.commands
@@ -229,7 +229,7 @@ def slides(att: Attachment, pres: "pptx.Presentation") -> AttachmentCollection:
     """Split PowerPoint into individual slide attachments."""
     chunks = []
 
-    for slide_num, slide in enumerate(pres.slides, 1):
+    for slide_num, _slide in enumerate(pres.slides, 1):
         chunk = Attachment(f"{att.path}#slide-{slide_num}")
         chunk._obj = pres  # Keep original presentation but mark specific slide
         chunk.commands = att.commands
@@ -355,8 +355,8 @@ def sections(att: Attachment, soup: "bs4.BeautifulSoup") -> AttachmentCollection
 
         return AttachmentCollection(chunks)
 
-    except ImportError:
-        raise ImportError("BeautifulSoup4 is required for HTML section splitting")
+    except ImportError as err:
+        raise ImportError("BeautifulSoup4 is required for HTML section splitting") from err
 
 
 # --- CUSTOM SPLITTING ---

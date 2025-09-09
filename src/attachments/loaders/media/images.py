@@ -43,6 +43,8 @@ def image_to_pil(att: Attachment) -> Attachment:
                 }
             )
 
-    except ImportError:
-        raise ImportError("Pillow is required for image loading. Install with: pip install Pillow")
+    except ImportError as err:
+        raise ImportError(
+            "Pillow is required for image loading. Install with: pip install Pillow"
+        ) from err
     return att

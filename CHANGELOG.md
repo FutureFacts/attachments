@@ -351,3 +351,34 @@ att | load.url_to_response | modify.morph_to_detected_type | load.pdf_to_pdfplum
 from attachments.pipelines import processors
 result = processors.pdf_to_llm(attach("https://example.com/doc.pdf"))
 ```
+## [0.23.0] - 2025-09-09
+
+### 🚀 Features & Improvements
+
+- PDF OCR integration moved into the primary PDF processor:
+  - `ocr:true` now produces OCR-only text (no duplicate standard text).
+  - `ocr:auto` conditionally runs OCR when text extraction is poor/limited.
+  - Honors `lang:` (e.g., `lang:chi_sim`) and provides clear guidance for missing Tesseract or language data.
+  - Removed the `present.ocr` presenter in favor of inline OCR.
+
+- IPYNB support:
+  - Added `ipynb_loader`, `ipynb_text_presenter`, and `ipynb_to_llm` processor.
+  - Fixed namespace import so the primary processor runs (no fallback to universal pipeline).
+  - Empty notebooks now yield empty text as expected by tests.
+
+- SVG images are always provided:
+  - If no rasterizer (cairosvg/Wand) is available, embed raw SVG as `data:image/svg+xml;base64,...`.
+  - `refine.resize_images` skips SVG data URLs to avoid losing them.
+
+- Higher-level API refinements:
+  - `auto_attach()` now prepends the prompt and uses raw loader text when available (avoids added headers), improving test expectations.
+
+### 🧹 Code Quality & Tooling
+
+- Fixed Black parse issues in docs scripts (e.g., fenced blocks wrapped) and various modules.
+- Broad Ruff cleanup across the codebase (B904, E731, E721, B007, UP022, UP035, F401/F841) and small refactors.
+- Pre-commit hooks (Black, Ruff with auto-fix, Pytest) are documented in CONTRIBUTING.md with setup instructions.
+
+### ✅ Tests
+
+- All unit tests updated to pass with the new processors and behaviors, including IPYNB and SVG fallbacks.
