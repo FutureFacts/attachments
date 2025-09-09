@@ -46,7 +46,17 @@ jobs:
           echo "📦 Package contents:"
           ls -la dist/
 
-      - name: Publish to PyPI
+      - name: Publish to PyPI (token)
+        if: ${{ secrets.PYPI_API_TOKEN != '' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          print-hash: true
+          verbose: true
+
+      - name: Publish to PyPI (trusted)
+        if: ${{ secrets.PYPI_API_TOKEN == '' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           print-hash: true
