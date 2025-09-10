@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "attachments"
-version = "0.23.0"
+version = "0.24.0"
 authors = [{ name = "Maxime Rivest", email = "mrive052@gmail.com" }]
 description = "The Python funnel for LLM context - turn any file into model-ready text + images, in one line."
 readme = "README.md"
