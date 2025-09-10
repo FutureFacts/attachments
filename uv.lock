@@ -412,7 +412,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.11.5" },
     { name = "pypdf", marker = "extra == 'most'", specifier = ">=5.0.0" },
     { name = "pypdf", marker = "extra == 'pdf'", specifier = ">=5.0.0" },
-    { name = "pypdfium2", specifier = ">=4.30.1" },
+    { name = "pypdfium2", specifier = ">=4.30.0" },
     { name = "pypdfium2", marker = "extra == 'common'", specifier = ">=4.0.0" },
     { name = "pypdfium2", marker = "extra == 'most'", specifier = ">=4.26.0" },
     { name = "pypdfium2", marker = "extra == 'pdf'", specifier = ">=4.26.0" },
