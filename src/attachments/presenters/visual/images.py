@@ -99,7 +99,7 @@ def images(att: Attachment, doc: "docx.Document") -> Attachment:
             docx_path_obj = Path(docx_path)
 
             # Run LibreOffice conversion
-            subprocess.run(
+            result = subprocess.run(
                 [
                     soffice,
                     "--headless",
@@ -111,15 +111,32 @@ def images(att: Attachment, doc: "docx.Document") -> Attachment:
                 ],
                 check=True,
                 capture_output=True,
+                text=True,
                 timeout=60,  # 60 second timeout
             )
 
-            # Find the generated PDF
-            pdf_path = Path(temp_dir) / (docx_path_obj.stem + ".pdf")
-            if not pdf_path.exists():
-                raise RuntimeError(f"PDF conversion failed - output file not found: {pdf_path}")
+            # Find the generated PDF (be robust to casing/naming differences)
+            expected = Path(temp_dir) / (docx_path_obj.stem + ".pdf")
+            if expected.exists():
+                return str(expected)
 
-            return str(pdf_path)
+            # Fallbacks: any *.pdf in outdir, prefer matching stem
+            candidates = sorted(p for p in Path(temp_dir).glob("*.pdf"))
+            if not candidates:
+                raise RuntimeError(
+                    "PDF conversion failed - no PDF produced. "
+                    f"expected: {expected}; stdout: {result.stdout.strip()} ; stderr: {result.stderr.strip()}"
+                )
+
+            # Prefer exact stem match (case-insensitive), then startswith, else largest file
+            stem_lower = docx_path_obj.stem.lower()
+            for c in candidates:
+                if c.stem.lower() == stem_lower:
+                    return str(c)
+            for c in candidates:
+                if c.stem.lower().startswith(stem_lower):
+                    return str(c)
+            return str(max(candidates, key=lambda p: p.stat().st_size))
 
         # Convert DOCX to PDF
         if not att.path:
@@ -395,7 +412,7 @@ def images(att: Attachment, pres: "pptx.Presentation") -> Attachment:
             pptx_path_obj = Path(pptx_path)
 
             # Run LibreOffice conversion
-            subprocess.run(
+            result = subprocess.run(
                 [
                     soffice,
                     "--headless",
@@ -407,15 +424,30 @@ def images(att: Attachment, pres: "pptx.Presentation") -> Attachment:
                 ],
                 check=True,
                 capture_output=True,
+                text=True,
                 timeout=60,  # 60 second timeout
             )
 
-            # Find the generated PDF
-            pdf_path = Path(temp_dir) / (pptx_path_obj.stem + ".pdf")
-            if not pdf_path.exists():
-                raise RuntimeError(f"PDF conversion failed - output file not found: {pdf_path}")
+            # Find the generated PDF (be robust to casing/naming differences)
+            expected = Path(temp_dir) / (pptx_path_obj.stem + ".pdf")
+            if expected.exists():
+                return str(expected)
 
-            return str(pdf_path)
+            candidates = sorted(p for p in Path(temp_dir).glob("*.pdf"))
+            if not candidates:
+                raise RuntimeError(
+                    "PDF conversion failed - no PDF produced. "
+                    f"expected: {expected}; stdout: {result.stdout.strip()} ; stderr: {result.stderr.strip()}"
+                )
+
+            stem_lower = pptx_path_obj.stem.lower()
+            for c in candidates:
+                if c.stem.lower() == stem_lower:
+                    return str(c)
+            for c in candidates:
+                if c.stem.lower().startswith(stem_lower):
+                    return str(c)
+            return str(max(candidates, key=lambda p: p.stat().st_size))
 
         # Convert PPTX to PDF
         if not att.path:
@@ -550,7 +582,7 @@ def images(att: Attachment, workbook: "openpyxl.Workbook") -> Attachment:
             excel_path_obj = Path(excel_path)
 
             # Run LibreOffice conversion
-            subprocess.run(
+            result = subprocess.run(
                 [
                     soffice,
                     "--headless",
@@ -562,15 +594,30 @@ def images(att: Attachment, workbook: "openpyxl.Workbook") -> Attachment:
                 ],
                 check=True,
                 capture_output=True,
+                text=True,
                 timeout=60,  # 60 second timeout
             )
 
-            # Find the generated PDF
-            pdf_path = Path(temp_dir) / (excel_path_obj.stem + ".pdf")
-            if not pdf_path.exists():
-                raise RuntimeError(f"PDF conversion failed - output file not found: {pdf_path}")
+            # Find the generated PDF (be robust to casing/naming differences)
+            expected = Path(temp_dir) / (excel_path_obj.stem + ".pdf")
+            if expected.exists():
+                return str(expected)
 
-            return str(pdf_path)
+            candidates = sorted(p for p in Path(temp_dir).glob("*.pdf"))
+            if not candidates:
+                raise RuntimeError(
+                    "PDF conversion failed - no PDF produced. "
+                    f"expected: {expected}; stdout: {result.stdout.strip()} ; stderr: {result.stderr.strip()}"
+                )
+
+            stem_lower = excel_path_obj.stem.lower()
+            for c in candidates:
+                if c.stem.lower() == stem_lower:
+                    return str(c)
+            for c in candidates:
+                if c.stem.lower().startswith(stem_lower):
+                    return str(c)
+            return str(max(candidates, key=lambda p: p.stat().st_size))
 
         # Convert Excel to PDF
         if not att.path:
