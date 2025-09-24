@@ -38,6 +38,7 @@ def text(att: Attachment, pdf: "pdfplumber.PDF") -> Attachment:
         for page_num in pages_to_process:
             if 1 <= page_num <= len(pdf.pages):
                 page = pdf.pages[page_num - 1]
+                page = page.dedupe_chars()
                 page_text = page.extract_text() or ""
 
                 # Track text statistics
